@@ -1,510 +1,523 @@
 "use strict";
 
-const canvas = document.getElementById("gameCanvas");
-const ctx = canvas.getContext("2d");
-const currentScoreElement = document.getElementById("currentScore");
-const highScoreElement = document.getElementById("highScore");
-const modal = document.getElementById("gameOverModal");
-const finalScoreElement = document.getElementById("finalScore");
-const finalHighScoreElement = document.getElementById("finalHighScore");
-const playAgainButton = document.getElementById("playAgainButton");
+import { GAME_CONFIG } from "./config.js";
 
-if (
-  !canvas ||
-  !currentScoreElement ||
-  !highScoreElement ||
-  !modal ||
-  !finalScoreElement ||
-  !finalHighScoreElement ||
-  !playAgainButton
-) {
-  console.error("Required DOM elements not found");
-}
+class Game {
+  constructor() {
+    this.canvas = document.getElementById("gameCanvas");
+    this.ctx = this.canvas.getContext("2d");
+    this.currentScoreElement = document.getElementById("currentScore");
+    this.highScoreElement = document.getElementById("highScore");
+    this.modal = document.getElementById("gameOverModal");
+    this.finalScoreElement = document.getElementById("finalScore");
+    this.finalHighScoreElement = document.getElementById("finalHighScore");
+    this.playAgainButton = document.getElementById("playAgainButton");
 
-const GRID_SIZE = 20;
-const TILE_COUNT = 20;
-const GAME_SPEED = 13;
-const FRAME_TIME = 1000 / 60;
+    this.validateElements();
+    this.initializeGame();
+    this.setupEventListeners();
+  }
 
-const FRUITS = [
-  {
-    name: "Apple",
-    color: "#e63946",
-    points: 10,
-    leafColor: "#2a9d8f",
-  },
-  {
-    name: "Golden Apple",
-    color: "#ffd700",
-    points: 50,
-    leafColor: "#ff9f1c",
-  },
-];
-
-let lastRenderTime = 0;
-let gameOver = false;
-let snake = [{ x: 10, y: 10 }];
-let dx = 0;
-let dy = 0;
-let score = 0;
-let highScore = parseInt(localStorage.getItem("snakeHighScore")) || 0;
-let food;
-let goldenApple = null;
-let goldenAppleTimer = null;
-
-highScoreElement.textContent = highScore;
-
-function getRandomPosition() {
-  let newPosition;
-  let validPosition = false;
-
-  while (!validPosition) {
-    newPosition = {
-      x: Math.floor(Math.random() * TILE_COUNT),
-      y: Math.floor(Math.random() * TILE_COUNT),
-    };
-
-    validPosition = true;
-    // Check collision with snake
-    for (let segment of snake) {
-      if (segment.x === newPosition.x && segment.y === newPosition.y) {
-        validPosition = false;
-        break;
-      }
-    }
-    // Check collision with other food
-    if (food && newPosition.x === food.x && newPosition.y === food.y) {
-      validPosition = false;
-    }
+  validateElements() {
     if (
-      goldenApple &&
-      newPosition.x === goldenApple.x &&
-      newPosition.y === goldenApple.y
+      !this.canvas ||
+      !this.currentScoreElement ||
+      !this.highScoreElement ||
+      !this.modal ||
+      !this.finalScoreElement ||
+      !this.finalHighScoreElement ||
+      !this.playAgainButton
     ) {
-      validPosition = false;
+      throw new Error("Required DOM elements not found");
     }
   }
 
-  return newPosition;
-}
-
-function trySpawnGoldenApple() {
-  if (!goldenApple && Math.random() < 0.15) {
-    // 15% chance
-    const position = getRandomPosition();
-    goldenApple = {
-      ...position,
-      type: FRUITS[1],
-    };
-
-    // Remove golden apple after 5 seconds
-    goldenAppleTimer = setTimeout(() => {
-      goldenApple = null;
-    }, 5000);
-  }
-}
-
-function getRandomFoodPosition() {
-  const position = getRandomPosition();
-  return {
-    ...position,
-    type: FRUITS[0], // Always regular apple
-  };
-}
-
-// Initialize food
-food = getRandomFoodPosition();
-
-playAgainButton.addEventListener("click", startNewGame);
-document.addEventListener("keydown", handleKeyPress);
-
-function handleKeyPress(e) {
-  if (
-    [
-      "ArrowUp",
-      "ArrowDown",
-      "ArrowLeft",
-      "ArrowRight",
-      "Space",
-      "Enter",
-    ].includes(e.key)
-  ) {
-    e.preventDefault();
+  initializeGame() {
+    this.lastRenderTime = 0;
+    this.gameOver = false;
+    this.snake = [{ x: 10, y: 10 }];
+    this.dx = 0;
+    this.dy = 0;
+    this.score = 0;
+    this.highScore = parseInt(localStorage.getItem("snakeHighScore")) || 0;
+    this.highScoreElement.textContent = this.highScore;
+    this.food = this.getRandomFoodPosition();
+    this.goldenApple = null;
+    this.goldenAppleTimer = null;
   }
 
-  if (gameOver && e.key === "Enter") {
-    startNewGame();
-    return;
+  setupEventListeners() {
+    this.boundHandleKeyPress = this.handleKeyPress.bind(this);
+    this.boundStartNewGame = this.startNewGame.bind(this);
+    this.boundGameLoop = this.gameLoop.bind(this);
+
+    document.addEventListener("keydown", this.boundHandleKeyPress);
+    this.playAgainButton.addEventListener("click", this.boundStartNewGame);
   }
 
-  switch (e.key) {
-    case "ArrowUp":
-      if (dy !== 1) {
-        dx = 0;
-        dy = -1;
+  cleanup() {
+    if (this.goldenAppleTimer) {
+      clearTimeout(this.goldenAppleTimer);
+      this.goldenAppleTimer = null;
+    }
+    document.removeEventListener("keydown", this.boundHandleKeyPress);
+    this.playAgainButton.removeEventListener("click", this.boundStartNewGame);
+  }
+
+  handleKeyPress(event) {
+    if (this.gameOver) {
+      if (event.key === "Enter") {
+        this.startNewGame();
       }
-      break;
-    case "ArrowDown":
-      if (dy !== -1) {
-        dx = 0;
-        dy = 1;
-      }
-      break;
-    case "ArrowLeft":
-      if (dx !== 1) {
-        dx = -1;
-        dy = 0;
-      }
-      break;
-    case "ArrowRight":
-      if (dx !== -1) {
-        dx = 1;
-        dy = 0;
-      }
-      break;
-  }
-}
-
-function gameLoop(currentTime) {
-  if (gameOver) return;
-
-  window.requestAnimationFrame(gameLoop);
-
-  const secondsSinceLastRender = (currentTime - lastRenderTime) / 1000;
-
-  if (secondsSinceLastRender < 1 / GAME_SPEED) {
-    render();
-    return;
-  }
-
-  lastRenderTime = currentTime;
-
-  update();
-  render();
-}
-
-function update() {
-  const head = { x: snake[0].x + dx, y: snake[0].y + dy };
-  snake.unshift(head);
-
-  let ate = false;
-
-  // Check regular apple collision
-  if (head.x === food.x && head.y === food.y) {
-    score += food.type.points;
-    currentScoreElement.textContent = score;
-    food = getRandomFoodPosition();
-    trySpawnGoldenApple(); // Try to spawn golden apple when regular apple is eaten
-    ate = true;
-  }
-
-  // Check golden apple collision
-  if (goldenApple && head.x === goldenApple.x && head.y === goldenApple.y) {
-    score += goldenApple.type.points;
-    currentScoreElement.textContent = score;
-    clearTimeout(goldenAppleTimer);
-    goldenApple = null;
-    ate = true;
-  }
-
-  if (!ate) {
-    snake.pop();
-  }
-
-  if (score > highScore) {
-    highScore = score;
-    localStorage.setItem("snakeHighScore", highScore);
-    highScoreElement.textContent = highScore;
-  }
-
-  // Check wall collision
-  if (
-    head.x < 0 ||
-    head.x >= TILE_COUNT ||
-    head.y < 0 ||
-    head.y >= TILE_COUNT
-  ) {
-    gameOver = true;
-    showGameOver();
-    return;
-  }
-
-  // Check self collision
-  for (let i = 1; i < snake.length; i++) {
-    if (head.x === snake[i].x && head.y === snake[i].y) {
-      gameOver = true;
-      showGameOver();
       return;
     }
+
+    switch (event.key) {
+      case "ArrowUp":
+        if (this.dy === 0) {
+          this.dx = 0;
+          this.dy = -1;
+        }
+        break;
+      case "ArrowDown":
+        if (this.dy === 0) {
+          this.dx = 0;
+          this.dy = 1;
+        }
+        break;
+      case "ArrowLeft":
+        if (this.dx === 0) {
+          this.dx = -1;
+          this.dy = 0;
+        }
+        break;
+      case "ArrowRight":
+        if (this.dx === 0) {
+          this.dx = 1;
+          this.dy = 0;
+        }
+        break;
+    }
   }
-}
 
-function render() {
-  ctx.fillStyle = "#222831";
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  getRandomPosition() {
+    let newPosition;
+    let validPosition = false;
 
-  if (snake.length > 0) {
-    // Create path for the entire snake body
-    ctx.beginPath();
-
-    // Get the first point
-    const start = {
-      x: snake[0].x * GRID_SIZE + GRID_SIZE / 2,
-      y: snake[0].y * GRID_SIZE + GRID_SIZE / 2,
-    };
-
-    // Start the path at the head
-    ctx.moveTo(start.x, start.y);
-
-    // Create smooth curve through all points
-    for (let i = 0; i < snake.length - 1; i++) {
-      const current = {
-        x: snake[i].x * GRID_SIZE + GRID_SIZE / 2,
-        y: snake[i].y * GRID_SIZE + GRID_SIZE / 2,
-      };
-      const next = {
-        x: snake[i + 1].x * GRID_SIZE + GRID_SIZE / 2,
-        y: snake[i + 1].y * GRID_SIZE + GRID_SIZE / 2,
+    while (!validPosition) {
+      newPosition = {
+        x: Math.floor(Math.random() * GAME_CONFIG.TILE_COUNT),
+        y: Math.floor(Math.random() * GAME_CONFIG.TILE_COUNT),
       };
 
-      // Calculate control points for smooth curve
-      const xc = (current.x + next.x) / 2;
-      const yc = (current.y + next.y) / 2;
-
-      // Draw curve to midpoint using the previous midpoint
-      ctx.quadraticCurveTo(current.x, current.y, xc, yc);
-    }
-
-    // Enhanced shadow for depth
-    ctx.shadowColor = "rgba(0, 0, 0, 0.4)";
-    ctx.shadowBlur = 6;
-    ctx.shadowOffsetX = 2;
-    ctx.shadowOffsetY = 2;
-
-    // More subtle gradient for the snake body
-    const gradient = ctx.createLinearGradient(
-      0,
-      0,
-      canvas.width,
-      canvas.height
-    );
-    gradient.addColorStop(0, "#3eb892"); // Base color
-    gradient.addColorStop(0.3, "#45c09c"); // Slightly lighter
-    gradient.addColorStop(0.6, "#3eb892"); // Back to base
-    gradient.addColorStop(0.9, "#39a885"); // Slightly darker
-
-    ctx.strokeStyle = gradient;
-    ctx.lineWidth = GRID_SIZE - 2;
-    ctx.lineCap = "round";
-    ctx.lineJoin = "round";
-    ctx.stroke();
-
-    // Reset shadow
-    ctx.shadowColor = "transparent";
-    ctx.shadowBlur = 0;
-    ctx.shadowOffsetX = 0;
-    ctx.shadowOffsetY = 0;
-
-    // Draw snake head with matching gradient
-    const head = snake[0];
-    const headX = head.x * GRID_SIZE + GRID_SIZE / 2;
-    const headY = head.y * GRID_SIZE + GRID_SIZE / 2;
-    const radius = (GRID_SIZE - 2) / 2;
-
-    const headGradient = ctx.createRadialGradient(
-      headX - radius / 2,
-      headY - radius / 2,
-      radius / 4,
-      headX,
-      headY,
-      radius
-    );
-    headGradient.addColorStop(0, "#45c09c"); // Slightly lighter
-    headGradient.addColorStop(0.7, "#3eb892"); // Base color
-    headGradient.addColorStop(1, "#39a885"); // Slightly darker
-
-    ctx.beginPath();
-    ctx.fillStyle = headGradient;
-    ctx.arc(headX, headY, radius, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Calculate eye positions based on direction
-    const eyeOffset = radius * 0.5;
-    let leftEyeX = headX - eyeOffset;
-    let rightEyeX = headX + eyeOffset;
-    let eyeY = headY;
-    let tongueStartX = headX;
-    let tongueStartY = headY;
-    let tongueEndX = headX;
-    let tongueEndY = headY;
-
-    // Adjust positions based on direction
-    if (dx === 1) {
-      eyeY = headY - radius * 0.3;
-      tongueStartX = headX + radius * 0.8;
-      tongueEndX = headX + radius + 8;
-    } else if (dx === -1) {
-      eyeY = headY - radius * 0.3;
-      tongueStartX = headX - radius * 0.8;
-      tongueEndX = headX - radius - 8;
-    } else if (dy === -1) {
-      leftEyeX = headX - radius * 0.3;
-      rightEyeX = headX + radius * 0.3;
-      eyeY = headY - eyeOffset;
-      tongueStartY = headY - radius * 0.8;
-      tongueEndY = headY - radius - 8;
-    } else if (dy === 1) {
-      leftEyeX = headX - radius * 0.3;
-      rightEyeX = headX + radius * 0.3;
-      eyeY = headY + eyeOffset;
-      tongueStartY = headY + radius * 0.8;
-      tongueEndY = headY + radius + 8;
-    }
-
-    // Draw eyes
-    ctx.fillStyle = "#000";
-    ctx.beginPath();
-    ctx.arc(leftEyeX, eyeY, 2.5, 0, Math.PI * 2);
-    ctx.arc(rightEyeX, eyeY, 2.5, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Add eye highlights
-    ctx.fillStyle = "rgba(255, 255, 255, 0.8)";
-    ctx.beginPath();
-    ctx.arc(leftEyeX - 0.5, eyeY - 0.5, 1, 0, Math.PI * 2);
-    ctx.arc(rightEyeX - 0.5, eyeY - 0.5, 1, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Draw tongue
-    if (dx !== 0 || dy !== 0) {
-      ctx.strokeStyle = "#ff1744";
-      ctx.lineWidth = 1.5;
-      ctx.lineCap = "round";
-
-      ctx.beginPath();
-      ctx.moveTo(tongueStartX, tongueStartY);
-      ctx.lineTo(tongueEndX, tongueEndY);
-
-      const forkLength = 4;
-      if (dx === 1) {
-        ctx.quadraticCurveTo(
-          tongueEndX + 2,
-          tongueEndY,
-          tongueEndX + 2,
-          tongueEndY - 3
-        );
-        ctx.moveTo(tongueEndX, tongueEndY);
-        ctx.quadraticCurveTo(
-          tongueEndX + 2,
-          tongueEndY,
-          tongueEndX + 2,
-          tongueEndY + 3
-        );
-      } else if (dx === -1) {
-        ctx.quadraticCurveTo(
-          tongueEndX - 2,
-          tongueEndY,
-          tongueEndX - 2,
-          tongueEndY - 3
-        );
-        ctx.moveTo(tongueEndX, tongueEndY);
-        ctx.quadraticCurveTo(
-          tongueEndX - 2,
-          tongueEndY,
-          tongueEndX - 2,
-          tongueEndY + 3
-        );
-      } else if (dy === -1) {
-        ctx.quadraticCurveTo(
-          tongueEndX,
-          tongueEndY - 2,
-          tongueEndX - 3,
-          tongueEndY - 2
-        );
-        ctx.moveTo(tongueEndX, tongueEndY);
-        ctx.quadraticCurveTo(
-          tongueEndX,
-          tongueEndY - 2,
-          tongueEndX + 3,
-          tongueEndY - 2
-        );
-      } else if (dy === 1) {
-        ctx.quadraticCurveTo(
-          tongueEndX,
-          tongueEndY + 2,
-          tongueEndX - 3,
-          tongueEndY + 2
-        );
-        ctx.moveTo(tongueEndX, tongueEndY);
-        ctx.quadraticCurveTo(
-          tongueEndX,
-          tongueEndY + 2,
-          tongueEndX + 3,
-          tongueEndY + 2
-        );
+      validPosition = true;
+      // Check collision with snake
+      for (let segment of this.snake) {
+        if (segment.x === newPosition.x && segment.y === newPosition.y) {
+          validPosition = false;
+          break;
+        }
       }
-      ctx.stroke();
+      // Check collision with other food
+      if (
+        this.food &&
+        newPosition.x === this.food.x &&
+        newPosition.y === this.food.y
+      ) {
+        validPosition = false;
+      }
+      if (
+        this.goldenApple &&
+        newPosition.x === this.goldenApple.x &&
+        newPosition.y === this.goldenApple.y
+      ) {
+        validPosition = false;
+      }
+    }
+
+    return newPosition;
+  }
+
+  getRandomFoodPosition() {
+    const position = this.getRandomPosition();
+    return {
+      ...position,
+      type: GAME_CONFIG.FRUITS[0], // Always regular apple
+    };
+  }
+
+  trySpawnGoldenApple() {
+    if (!this.goldenApple && Math.random() < GAME_CONFIG.GOLDEN_APPLE_CHANCE) {
+      // 15% chance
+      const position = this.getRandomPosition();
+      this.goldenApple = {
+        ...position,
+        type: GAME_CONFIG.FRUITS[1],
+      };
+
+      // Remove golden apple after 5 seconds
+      this.goldenAppleTimer = setTimeout(() => {
+        this.goldenApple = null;
+      }, GAME_CONFIG.GOLDEN_APPLE_DURATION);
     }
   }
 
-  // Draw food
-  drawFruit(food);
-  if (goldenApple) {
-    drawFruit(goldenApple);
+  update() {
+    const head = { x: this.snake[0].x + this.dx, y: this.snake[0].y + this.dy };
+    this.snake.unshift(head);
+
+    let ate = false;
+
+    // Check regular apple collision
+    if (head.x === this.food.x && head.y === this.food.y) {
+      this.score += this.food.type.points;
+      this.currentScoreElement.textContent = this.score;
+      this.food = this.getRandomFoodPosition();
+      this.trySpawnGoldenApple(); // Try to spawn golden apple when regular apple is eaten
+      ate = true;
+    }
+
+    // Check golden apple collision
+    if (
+      this.goldenApple &&
+      head.x === this.goldenApple.x &&
+      head.y === this.goldenApple.y
+    ) {
+      this.score += this.goldenApple.type.points;
+      this.currentScoreElement.textContent = this.score;
+      clearTimeout(this.goldenAppleTimer);
+      this.goldenApple = null;
+      ate = true;
+    }
+
+    if (!ate) {
+      this.snake.pop();
+    }
+
+    if (this.score > this.highScore) {
+      this.highScore = this.score;
+      localStorage.setItem("snakeHighScore", this.highScore);
+      this.highScoreElement.textContent = this.highScore;
+    }
+
+    // Check wall collision
+    if (
+      head.x < 0 ||
+      head.x >= GAME_CONFIG.TILE_COUNT ||
+      head.y < 0 ||
+      head.y >= GAME_CONFIG.TILE_COUNT
+    ) {
+      this.gameOver = true;
+      this.showGameOver();
+      return;
+    }
+
+    // Check self collision
+    for (let i = 1; i < this.snake.length; i++) {
+      if (head.x === this.snake[i].x && head.y === this.snake[i].y) {
+        this.gameOver = true;
+        this.showGameOver();
+        return;
+      }
+    }
+  }
+
+  render() {
+    if (this.snake.length > 0) {
+      // Clear canvas
+      this.ctx.fillStyle = GAME_CONFIG.COLORS.BACKGROUND;
+      this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+
+      // Create path for the entire snake body
+      this.ctx.beginPath();
+
+      const start = {
+        x: this.snake[0].x * GAME_CONFIG.GRID_SIZE + GAME_CONFIG.GRID_SIZE / 2,
+        y: this.snake[0].y * GAME_CONFIG.GRID_SIZE + GAME_CONFIG.GRID_SIZE / 2,
+      };
+
+      this.ctx.moveTo(start.x, start.y);
+
+      // Create smooth curve through all points
+      for (let i = 0; i < this.snake.length - 1; i++) {
+        const current = {
+          x:
+            this.snake[i].x * GAME_CONFIG.GRID_SIZE + GAME_CONFIG.GRID_SIZE / 2,
+          y:
+            this.snake[i].y * GAME_CONFIG.GRID_SIZE + GAME_CONFIG.GRID_SIZE / 2,
+        };
+        const next = {
+          x:
+            this.snake[i + 1].x * GAME_CONFIG.GRID_SIZE +
+            GAME_CONFIG.GRID_SIZE / 2,
+          y:
+            this.snake[i + 1].y * GAME_CONFIG.GRID_SIZE +
+            GAME_CONFIG.GRID_SIZE / 2,
+        };
+
+        const xc = (current.x + next.x) / 2;
+        const yc = (current.y + next.y) / 2;
+
+        this.ctx.quadraticCurveTo(current.x, current.y, xc, yc);
+      }
+
+      // Enhanced shadow for depth
+      this.ctx.shadowColor = "rgba(0, 0, 0, 0.4)";
+      this.ctx.shadowBlur = 6;
+      this.ctx.shadowOffsetX = 2;
+      this.ctx.shadowOffsetY = 2;
+
+      // More subtle gradient for the snake body
+      const gradient = this.ctx.createLinearGradient(
+        0,
+        0,
+        this.canvas.width,
+        this.canvas.height
+      );
+      gradient.addColorStop(0, GAME_CONFIG.COLORS.SNAKE_BASE);
+      gradient.addColorStop(0.3, GAME_CONFIG.COLORS.SNAKE_LIGHT);
+      gradient.addColorStop(0.6, GAME_CONFIG.COLORS.SNAKE_BASE);
+      gradient.addColorStop(0.9, GAME_CONFIG.COLORS.SNAKE_DARK);
+
+      this.ctx.strokeStyle = gradient;
+      this.ctx.lineWidth = GAME_CONFIG.GRID_SIZE - 2;
+      this.ctx.lineCap = "round";
+      this.ctx.lineJoin = "round";
+      this.ctx.stroke();
+
+      // Reset shadow
+      this.ctx.shadowColor = "transparent";
+      this.ctx.shadowBlur = 0;
+      this.ctx.shadowOffsetX = 0;
+      this.ctx.shadowOffsetY = 0;
+
+      // Draw snake head
+      const head = this.snake[0];
+      const headX = head.x * GAME_CONFIG.GRID_SIZE + GAME_CONFIG.GRID_SIZE / 2;
+      const headY = head.y * GAME_CONFIG.GRID_SIZE + GAME_CONFIG.GRID_SIZE / 2;
+      const radius = (GAME_CONFIG.GRID_SIZE - 2) / 2;
+
+      const headGradient = this.ctx.createRadialGradient(
+        headX - radius / 2,
+        headY - radius / 2,
+        radius / 4,
+        headX,
+        headY,
+        radius
+      );
+      headGradient.addColorStop(0, GAME_CONFIG.COLORS.SNAKE_LIGHT);
+      headGradient.addColorStop(0.7, GAME_CONFIG.COLORS.SNAKE_BASE);
+      headGradient.addColorStop(1, GAME_CONFIG.COLORS.SNAKE_DARK);
+
+      this.ctx.beginPath();
+      this.ctx.fillStyle = headGradient;
+      this.ctx.arc(headX, headY, radius, 0, Math.PI * 2);
+      this.ctx.fill();
+
+      // Calculate eye positions based on direction
+      const eyeOffset = radius * 0.5;
+      let leftEyeX = headX - eyeOffset;
+      let rightEyeX = headX + eyeOffset;
+      let eyeY = headY;
+      let tongueStartX = headX;
+      let tongueStartY = headY;
+      let tongueEndX = headX;
+      let tongueEndY = headY;
+
+      // Adjust positions based on direction
+      if (this.dx === 1) {
+        eyeY = headY - radius * 0.3;
+        tongueStartX = headX + radius * 0.8;
+        tongueEndX = headX + radius + 8;
+      } else if (this.dx === -1) {
+        eyeY = headY - radius * 0.3;
+        tongueStartX = headX - radius * 0.8;
+        tongueEndX = headX - radius - 8;
+      } else if (this.dy === -1) {
+        leftEyeX = headX - radius * 0.3;
+        rightEyeX = headX + radius * 0.3;
+        eyeY = headY - eyeOffset;
+        tongueStartY = headY - radius * 0.8;
+        tongueEndY = headY - radius - 8;
+      } else if (this.dy === 1) {
+        leftEyeX = headX - radius * 0.3;
+        rightEyeX = headX + radius * 0.3;
+        eyeY = headY + eyeOffset;
+        tongueStartY = headY + radius * 0.8;
+        tongueEndY = headY + radius + 8;
+      }
+
+      // Draw eyes
+      this.ctx.fillStyle = "#000";
+      this.ctx.beginPath();
+      this.ctx.arc(leftEyeX, eyeY, 2.5, 0, Math.PI * 2);
+      this.ctx.arc(rightEyeX, eyeY, 2.5, 0, Math.PI * 2);
+      this.ctx.fill();
+
+      // Add eye highlights
+      this.ctx.fillStyle = "rgba(255, 255, 255, 0.8)";
+      this.ctx.beginPath();
+      this.ctx.arc(leftEyeX - 0.5, eyeY - 0.5, 1, 0, Math.PI * 2);
+      this.ctx.arc(rightEyeX - 0.5, eyeY - 0.5, 1, 0, Math.PI * 2);
+      this.ctx.fill();
+
+      // Draw tongue
+      if (this.dx !== 0 || this.dy !== 0) {
+        this.ctx.strokeStyle = GAME_CONFIG.COLORS.TONGUE;
+        this.ctx.lineWidth = 1.5;
+        this.ctx.lineCap = "round";
+
+        this.ctx.beginPath();
+        this.ctx.moveTo(tongueStartX, tongueStartY);
+        this.ctx.lineTo(tongueEndX, tongueEndY);
+
+        if (this.dx === 1) {
+          this.ctx.quadraticCurveTo(
+            tongueEndX + 2,
+            tongueEndY,
+            tongueEndX + 2,
+            tongueEndY - 3
+          );
+          this.ctx.moveTo(tongueEndX, tongueEndY);
+          this.ctx.quadraticCurveTo(
+            tongueEndX + 2,
+            tongueEndY,
+            tongueEndX + 2,
+            tongueEndY + 3
+          );
+        } else if (this.dx === -1) {
+          this.ctx.quadraticCurveTo(
+            tongueEndX - 2,
+            tongueEndY,
+            tongueEndX - 2,
+            tongueEndY - 3
+          );
+          this.ctx.moveTo(tongueEndX, tongueEndY);
+          this.ctx.quadraticCurveTo(
+            tongueEndX - 2,
+            tongueEndY,
+            tongueEndX - 2,
+            tongueEndY + 3
+          );
+        } else if (this.dy === -1) {
+          this.ctx.quadraticCurveTo(
+            tongueEndX,
+            tongueEndY - 2,
+            tongueEndX - 3,
+            tongueEndY - 2
+          );
+          this.ctx.moveTo(tongueEndX, tongueEndY);
+          this.ctx.quadraticCurveTo(
+            tongueEndX,
+            tongueEndY - 2,
+            tongueEndX + 3,
+            tongueEndY - 2
+          );
+        } else if (this.dy === 1) {
+          this.ctx.quadraticCurveTo(
+            tongueEndX,
+            tongueEndY + 2,
+            tongueEndX - 3,
+            tongueEndY + 2
+          );
+          this.ctx.moveTo(tongueEndX, tongueEndY);
+          this.ctx.quadraticCurveTo(
+            tongueEndX,
+            tongueEndY + 2,
+            tongueEndX + 3,
+            tongueEndY + 2
+          );
+        }
+        this.ctx.stroke();
+      }
+    }
+
+    // Draw food
+    this.drawFruit(this.food);
+    if (this.goldenApple) {
+      this.drawFruit(this.goldenApple);
+    }
+  }
+
+  drawFruit(fruit) {
+    const fruitX = fruit.x * GAME_CONFIG.GRID_SIZE;
+    const fruitY = fruit.y * GAME_CONFIG.GRID_SIZE;
+
+    this.ctx.fillStyle = fruit.type.color;
+    this.ctx.beginPath();
+    this.ctx.arc(
+      fruitX + GAME_CONFIG.GRID_SIZE / 2,
+      fruitY + GAME_CONFIG.GRID_SIZE / 2,
+      GAME_CONFIG.GRID_SIZE / 2 - 2,
+      0,
+      Math.PI * 2
+    );
+    this.ctx.fill();
+
+    this.ctx.fillStyle = fruit.type.leafColor;
+    this.ctx.beginPath();
+    this.ctx.ellipse(
+      fruitX + GAME_CONFIG.GRID_SIZE / 2,
+      fruitY,
+      4,
+      8,
+      Math.PI / 4,
+      0,
+      Math.PI * 2
+    );
+    this.ctx.fill();
+  }
+
+  gameLoop(currentTime) {
+    try {
+      if (this.gameOver) return;
+
+      window.requestAnimationFrame(this.boundGameLoop);
+
+      const secondsSinceLastRender = (currentTime - this.lastRenderTime) / 1000;
+      if (secondsSinceLastRender < 1 / GAME_CONFIG.GAME_SPEED) return;
+
+      this.lastRenderTime = currentTime;
+
+      this.update();
+      this.render();
+    } catch (error) {
+      console.error("Game loop error:", error);
+      this.gameOver = true;
+      this.showGameOver();
+    }
+  }
+
+  showGameOver() {
+    this.cleanup();
+    this.finalScoreElement.textContent = this.score;
+    this.finalHighScoreElement.textContent = this.highScore;
+    this.modal.style.display = "block";
+  }
+
+  startNewGame() {
+    this.modal.style.display = "none";
+    this.initializeGame();
+    this.setupEventListeners();
+    requestAnimationFrame(this.boundGameLoop);
   }
 }
 
-function drawFruit(fruit) {
-  const fruitX = fruit.x * GRID_SIZE;
-  const fruitY = fruit.y * GRID_SIZE;
-
-  ctx.fillStyle = fruit.type.color;
-  ctx.beginPath();
-  ctx.arc(
-    fruitX + GRID_SIZE / 2,
-    fruitY + GRID_SIZE / 2,
-    GRID_SIZE / 2 - 2,
-    0,
-    Math.PI * 2
-  );
-  ctx.fill();
-
-  ctx.fillStyle = fruit.type.leafColor;
-  ctx.beginPath();
-  ctx.ellipse(
-    fruitX + GRID_SIZE / 2,
-    fruitY,
-    4,
-    8,
-    Math.PI / 4,
-    0,
-    Math.PI * 2
-  );
-  ctx.fill();
-}
-
-function showGameOver() {
-  finalScoreElement.textContent = score;
-  finalHighScoreElement.textContent = highScore;
-  modal.style.display = "block";
-}
-
-function startNewGame() {
-  modal.style.display = "none";
-  snake = [{ x: 10, y: 10 }];
-  dx = 0;
-  dy = 0;
-  score = 0;
-  currentScoreElement.textContent = score;
-  food = getRandomFoodPosition();
-  if (goldenAppleTimer) {
-    clearTimeout(goldenAppleTimer);
+// Error boundary
+window.onerror = function (message, source, lineno, colno, error) {
+  console.error("Game error:", { message, source, lineno, colno, error });
+  const game = window.gameInstance;
+  if (game) {
+    game.cleanup();
+    game.showGameOver();
   }
-  goldenApple = null;
-  gameOver = false;
-  lastRenderTime = 0;
-  requestAnimationFrame(gameLoop);
-}
+  return true;
+};
 
-// Start the game
-requestAnimationFrame(gameLoop);
+// Initialize game
+try {
+  window.gameInstance = new Game();
+  window.gameInstance.startNewGame();
+} catch (error) {
+  console.error("Failed to initialize game:", error);
+}
