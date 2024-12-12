@@ -16,6 +16,7 @@ class Game {
     this.validateElements();
     this.initializeGame();
     this.setupEventListeners();
+    this.initializePointsGuide();
   }
 
   validateElements() {
@@ -500,6 +501,29 @@ class Game {
     this.initializeGame();
     this.setupEventListeners();
     requestAnimationFrame(this.boundGameLoop);
+  }
+
+  initializePointsGuide() {
+    const apples = document.querySelectorAll(".apple-icon");
+    apples.forEach((canvas, index) => {
+      const ctx = canvas.getContext("2d");
+      const isGolden = canvas.classList.contains("golden");
+      const fruit = {
+        type: GAME_CONFIG.FRUITS[isGolden ? 1 : 0],
+      };
+
+      // Draw the apple
+      ctx.fillStyle = fruit.type.color;
+      ctx.beginPath();
+      ctx.arc(10, 10, 8, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Draw the leaf
+      ctx.fillStyle = fruit.type.leafColor;
+      ctx.beginPath();
+      ctx.ellipse(10, 4, 2, 4, Math.PI / 4, 0, Math.PI * 2);
+      ctx.fill();
+    });
   }
 }
 

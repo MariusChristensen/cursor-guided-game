@@ -76,8 +76,8 @@ A modern take on the classic Snake game, built with JavaScript and HTML5 Canvas.
 ## How to Play
 
 - Use arrow keys to control the snake
-- Collect red apples to grow and score points
-- Golden apples appear randomly and give bonus points
+- Collect red apples to grow and score points (🍎 = 10 points)
+- Golden apples appear randomly for bonus points (✨🍎 = 50 points)
 - Avoid hitting walls and yourself
 - Press Enter to restart after game over
 
