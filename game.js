@@ -23,7 +23,8 @@ if (
 
 const GRID_SIZE = 20;
 const TILE_COUNT = 20;
-const GAME_SPEED = 10; // Frames per second
+const GAME_SPEED = 15; // Increased from 10
+const FRAME_TIME = 1000 / 60; // Target 60 FPS
 
 let snake = [{ x: 10, y: 10 }];
 let food = getRandomFoodPosition();
@@ -158,12 +159,23 @@ function gameLoop(currentTime) {
 
   window.requestAnimationFrame(gameLoop);
 
-  // Calculate delta time and decide if we should update
+  // Calculate time since last update
   const secondsSinceLastRender = (currentTime - lastRenderTime) / 1000;
-  if (secondsSinceLastRender < 1 / GAME_SPEED) return;
+
+  // Only update game state at game speed
+  if (secondsSinceLastRender < 1 / GAME_SPEED) {
+    // Still render every frame for smooth graphics
+    render();
+    return;
+  }
 
   lastRenderTime = currentTime;
 
+  update(); // Game logic
+  render(); // Drawing
+}
+
+function update() {
   // Move snake
   const head = { x: snake[0].x + dx, y: snake[0].y + dy };
   snake.unshift(head);
@@ -174,7 +186,6 @@ function gameLoop(currentTime) {
     score += 10;
     currentScoreElement.textContent = score;
 
-    // Update high score if current score is higher
     if (score > highScore) {
       highScore = score;
       localStorage.setItem("snakeHighScore", highScore);
@@ -183,34 +194,6 @@ function gameLoop(currentTime) {
   } else {
     snake.pop();
   }
-
-  // Clear canvas
-  ctx.fillStyle = "#222831";
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-  // Draw snake using our new function
-  drawSnake();
-
-  // Draw food with a more apple-like appearance
-  const foodX = food.x * GRID_SIZE;
-  const foodY = food.y * GRID_SIZE;
-
-  ctx.fillStyle = "#e63946";
-  ctx.beginPath();
-  ctx.arc(
-    foodX + GRID_SIZE / 2,
-    foodY + GRID_SIZE / 2,
-    GRID_SIZE / 2 - 2,
-    0,
-    Math.PI * 2
-  );
-  ctx.fill();
-
-  // Add a leaf to the food
-  ctx.fillStyle = "#2a9d8f";
-  ctx.beginPath();
-  ctx.ellipse(foodX + GRID_SIZE / 2, foodY, 4, 8, Math.PI / 4, 0, Math.PI * 2);
-  ctx.fill();
 
   // Game over conditions
   if (
@@ -232,6 +215,35 @@ function gameLoop(currentTime) {
       return;
     }
   }
+}
+
+function render() {
+  // Clear canvas
+  ctx.fillStyle = "#222831";
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  // Draw snake
+  drawSnake();
+
+  // Draw food
+  const foodX = food.x * GRID_SIZE;
+  const foodY = food.y * GRID_SIZE;
+
+  ctx.fillStyle = "#e63946";
+  ctx.beginPath();
+  ctx.arc(
+    foodX + GRID_SIZE / 2,
+    foodY + GRID_SIZE / 2,
+    GRID_SIZE / 2 - 2,
+    0,
+    Math.PI * 2
+  );
+  ctx.fill();
+
+  ctx.fillStyle = "#2a9d8f";
+  ctx.beginPath();
+  ctx.ellipse(foodX + GRID_SIZE / 2, foodY, 4, 8, Math.PI / 4, 0, Math.PI * 2);
+  ctx.fill();
 }
 
 function resetGame() {
