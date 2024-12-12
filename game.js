@@ -23,7 +23,7 @@ if (
 
 const GRID_SIZE = 20;
 const TILE_COUNT = 20;
-const GAME_SPEED = 13; // Adjusted for optimal gameplay feel
+const GAME_SPEED = 13; // Increased from 10
 const FRAME_TIME = 1000 / 60; // Target 60 FPS
 
 let snake = [{ x: 10, y: 10 }];
