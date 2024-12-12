@@ -11,6 +11,18 @@
       <div class="high-score">High Score: <span id="highScore">0</span></div>
     </div>
     <canvas id="gameCanvas" width="400" height="400"></canvas>
+
+    <div id="gameOverModal" class="modal">
+      <div class="modal-content">
+        <h2>Game Over!</h2>
+        <div class="final-scores">
+          <p>Score: <span id="finalScore">0</span></p>
+          <p>High Score: <span id="finalHighScore">0</span></p>
+        </div>
+        <button id="playAgainButton">Play Again</button>
+      </div>
+    </div>
+
     <script src="game.js"></script>
   </body>
 </html>
