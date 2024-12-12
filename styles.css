@@ -10,3 +10,20 @@ body {
   align-items: center;
   background-color: #f0f0f0;
 }
+
+.score-container {
+  display: flex;
+  justify-content: space-between;
+  width: 400px;
+  margin-bottom: 10px;
+  font-size: 20px;
+  font-family: Arial, sans-serif;
+}
+
+.score,
+.high-score {
+  padding: 10px;
+  background-color: #fff;
+  border-radius: 5px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}

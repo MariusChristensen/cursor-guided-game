@@ -1,5 +1,7 @@
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
+const currentScoreElement = document.getElementById("currentScore");
+const highScoreElement = document.getElementById("highScore");
 
 const gridSize = 20;
 const tileCount = 20;
@@ -12,6 +14,10 @@ let food = {
 let dx = 0;
 let dy = 0;
 let score = 0;
+let highScore = localStorage.getItem("snakeHighScore") || 0;
+
+// Update the high score display initially
+highScoreElement.textContent = highScore;
 
 document.addEventListener("keydown", handleKeyPress);
 
@@ -56,6 +62,14 @@ function gameLoop() {
       y: Math.floor(Math.random() * tileCount),
     };
     score += 10;
+    currentScoreElement.textContent = score;
+
+    // Update high score if current score is higher
+    if (score > highScore) {
+      highScore = score;
+      localStorage.setItem("snakeHighScore", highScore);
+      highScoreElement.textContent = highScore;
+    }
   } else {
     snake.pop();
   }
@@ -107,6 +121,7 @@ function resetGame() {
   dx = 0;
   dy = 0;
   score = 0;
+  currentScoreElement.textContent = score;
   food = {
     x: Math.floor(Math.random() * tileCount),
     y: Math.floor(Math.random() * tileCount),
