@@ -47,6 +47,10 @@ class Game {
     this.goldenAppleTimer = null;
     this.lastDirectionChange = 0;
     this.directionChangeThreshold = 50; // ms between direction changes
+
+    // Initialize high scores
+    this.highScores = this.loadHighScores();
+    this.updateHighScoresList();
   }
 
   setupEventListeners() {
@@ -56,6 +60,9 @@ class Game {
 
     document.addEventListener("keydown", this.boundHandleKeyPress);
     this.playAgainButton.addEventListener("click", this.boundStartNewGame);
+    document.getElementById("clearScoresButton").addEventListener("click", () => {
+      this.clearHighScores();
+    });
   }
 
   cleanup() {
@@ -70,6 +77,11 @@ class Game {
   handleKeyPress(event) {
     if (this.gameOver) {
       if (event.key === "Enter") {
+        // If there's a visible name input and it's a top score, save the score
+        const nameInputContainer = document.getElementById("nameInputContainer");
+        if (nameInputContainer.style.display === "block") {
+          this.saveHighScore(this.score);
+        }
         this.startNewGame();
       }
       return;
@@ -444,6 +456,28 @@ class Game {
     this.cleanup();
     this.finalScoreElement.textContent = this.score;
     this.finalHighScoreElement.textContent = this.highScore;
+
+    // Check if it's a top 5 score
+    const nameInputContainer = document.getElementById("nameInputContainer");
+    const playerNameInput = document.getElementById("playerName");
+
+    if (this.isTopScore(this.score)) {
+      nameInputContainer.style.display = "block";
+      playerNameInput.value = "";
+      playerNameInput.focus();
+
+      // Update the play again button to save the score
+      this.playAgainButton.addEventListener(
+        "click",
+        () => {
+          this.saveHighScore(this.score);
+        },
+        { once: true }
+      );
+    } else {
+      nameInputContainer.style.display = "none";
+    }
+
     this.modal.style.display = "block";
   }
 
@@ -475,6 +509,62 @@ class Game {
       ctx.ellipse(10, 4, 2, 4, Math.PI / 4, 0, Math.PI * 2);
       ctx.fill();
     });
+  }
+
+  loadHighScores() {
+    const scores = localStorage.getItem("snakeHighScores");
+    return scores ? JSON.parse(scores) : [];
+  }
+
+  isTopScore(score) {
+    return (
+      this.highScores.length < 3 || // Changed from 5 to 3
+      score > this.highScores[this.highScores.length - 1].score
+    );
+  }
+
+  saveHighScore(score) {
+    const playerName = document.getElementById("playerName").value.trim() || "Anonymous";
+    const newScore = {
+      name: playerName,
+      score: score,
+      date: new Date().toLocaleDateString(),
+    };
+
+    this.highScores.push(newScore);
+
+    // Sort scores in descending order
+    this.highScores.sort((a, b) => b.score - a.score);
+
+    // Keep only top 3 (changed from 5)
+    this.highScores = this.highScores.slice(0, 3);
+
+    // Save to localStorage
+    localStorage.setItem("snakeHighScores", JSON.stringify(this.highScores));
+
+    // Update the display
+    this.updateHighScoresList();
+  }
+
+  updateHighScoresList() {
+    const topScoresList = document.getElementById("topScores");
+    topScoresList.innerHTML = "";
+
+    this.highScores.forEach((score, index) => {
+      const li = document.createElement("li");
+      li.innerHTML = `
+            <span class="player-name">${score.name}</span>
+            <span class="score-value">${score.score} points</span>
+            <span class="date">${score.date}</span>
+        `;
+      topScoresList.appendChild(li);
+    });
+  }
+
+  clearHighScores() {
+    localStorage.removeItem("snakeHighScores");
+    this.highScores = [];
+    this.updateHighScoresList();
   }
 }
 

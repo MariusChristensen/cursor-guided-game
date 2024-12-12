@@ -3,17 +3,11 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta
-      name="description"
-      content="A classic Snake game with modern styling"
-    />
+    <meta name="description" content="A classic Snake game with modern styling" />
     <title>SnakeySnake</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Righteous&display=swap"
-      rel="stylesheet"
-    />
+    <link href="https://fonts.googleapis.com/css2?family=Righteous&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
@@ -34,6 +28,15 @@
           <span class="points">50 pts</span>
         </div>
       </div>
+      <div class="high-score-list">
+        <div class="score-header">
+          <h2>Top 3 Scores</h2>
+          <button id="clearScoresButton" type="button">Clear</button>
+        </div>
+        <ol id="topScores">
+          <!-- Scores will be inserted here by JavaScript -->
+        </ol>
+      </div>
     </div>
 
     <div id="gameOverModal" class="modal">
@@ -44,10 +47,12 @@
           <p>Score: <span id="finalScore">0</span></p>
           <p>High Score: <span id="finalHighScore">0</span></p>
         </div>
+        <div id="nameInputContainer" style="display: none">
+          <p class="top-score-message">You got a top 5 score!</p>
+          <input type="text" id="playerName" placeholder="Enter your name" maxlength="20" />
+        </div>
         <button id="playAgainButton" type="button">Play Again</button>
-        <p class="restart-hint">
-          Press <span class="key">Enter</span> to restart
-        </p>
+        <p class="restart-hint">Press <span class="key">Enter</span> to restart</p>
       </div>
     </div>
 
