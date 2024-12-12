@@ -72,6 +72,7 @@ class Game {
     }
     document.removeEventListener("keydown", this.boundHandleKeyPress);
     this.playAgainButton.removeEventListener("click", this.boundStartNewGame);
+    document.getElementById("clearScoresButton").removeEventListener("click", this.clearHighScores);
   }
 
   handleKeyPress(event) {
@@ -512,8 +513,13 @@ class Game {
   }
 
   loadHighScores() {
-    const scores = localStorage.getItem("snakeHighScores");
-    return scores ? JSON.parse(scores) : [];
+    try {
+      const scores = localStorage.getItem("snakeHighScores");
+      return scores ? JSON.parse(scores) : [];
+    } catch (error) {
+      console.error("Error loading scores:", error);
+      return [];
+    }
   }
 
   isTopScore(score) {
@@ -524,9 +530,15 @@ class Game {
   }
 
   saveHighScore(score) {
-    const playerName = document.getElementById("playerName").value.trim() || "Anonymous";
+    const playerNameInput = document.getElementById("playerName");
+    const playerName = playerNameInput.value.trim();
+
+    if (playerName.length > 20) {
+      playerNameInput.value = playerName.substring(0, 20);
+    }
+
     const newScore = {
-      name: playerName,
+      name: playerName || "Anonymous",
       score: score,
       date: new Date().toLocaleDateString(),
     };

@@ -26,4 +26,10 @@ export const GAME_CONFIG = {
       leafColor: "#ff9f1c",
     },
   ],
+  MAX_NAME_LENGTH: 20,
+  MIN_NAME_LENGTH: 1,
+  ERRORS: {
+    LOAD_SCORES: "Failed to load high scores",
+    SAVE_SCORES: "Failed to save high scores",
+  },
 };

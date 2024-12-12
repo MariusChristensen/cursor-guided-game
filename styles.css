@@ -255,7 +255,7 @@ canvas {
 }
 
 button:focus-visible {
-  outline: 2px solid #4ecca3;
+  outline: 2px solid var(--color-primary);
   outline-offset: 2px;
 }
 
@@ -393,4 +393,10 @@ button:focus-visible {
 
 #clearScoresButton:active {
   transform: translateY(0);
+}
+
+.score-value,
+.player-name,
+.date {
+  transition: opacity 0.2s ease;
 }
