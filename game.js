@@ -45,6 +45,8 @@ class Game {
     this.food = this.getRandomFoodPosition();
     this.goldenApple = null;
     this.goldenAppleTimer = null;
+    this.lastDirectionChange = 0;
+    this.directionChangeThreshold = 50; // ms between direction changes
   }
 
   setupEventListeners() {
@@ -73,29 +75,56 @@ class Game {
       return;
     }
 
+    const currentTime = Date.now();
+    if (currentTime - this.lastDirectionChange < this.directionChangeThreshold) {
+      return; // Ignore rapid keypresses
+    }
+
+    const head = this.snake[0];
+    let nextX = head.x;
+    let nextY = head.y;
+
     switch (event.key) {
       case "ArrowUp":
         if (this.dy === 0) {
-          this.dx = 0;
-          this.dy = -1;
+          // Only if not moving vertically
+          nextY = head.y - 1;
+          // Check if this would hit the neck
+          if (this.snake.length <= 1 || nextY !== this.snake[1].y || nextX !== this.snake[1].x) {
+            this.dx = 0;
+            this.dy = -1;
+            this.lastDirectionChange = currentTime;
+          }
         }
         break;
       case "ArrowDown":
         if (this.dy === 0) {
-          this.dx = 0;
-          this.dy = 1;
+          nextY = head.y + 1;
+          if (this.snake.length <= 1 || nextY !== this.snake[1].y || nextX !== this.snake[1].x) {
+            this.dx = 0;
+            this.dy = 1;
+            this.lastDirectionChange = currentTime;
+          }
         }
         break;
       case "ArrowLeft":
         if (this.dx === 0) {
-          this.dx = -1;
-          this.dy = 0;
+          nextX = head.x - 1;
+          if (this.snake.length <= 1 || nextY !== this.snake[1].y || nextX !== this.snake[1].x) {
+            this.dx = -1;
+            this.dy = 0;
+            this.lastDirectionChange = currentTime;
+          }
         }
         break;
       case "ArrowRight":
         if (this.dx === 0) {
-          this.dx = 1;
-          this.dy = 0;
+          nextX = head.x + 1;
+          if (this.snake.length <= 1 || nextY !== this.snake[1].y || nextX !== this.snake[1].x) {
+            this.dx = 1;
+            this.dy = 0;
+            this.lastDirectionChange = currentTime;
+          }
         }
         break;
     }
@@ -120,18 +149,10 @@ class Game {
         }
       }
       // Check collision with other food
-      if (
-        this.food &&
-        newPosition.x === this.food.x &&
-        newPosition.y === this.food.y
-      ) {
+      if (this.food && newPosition.x === this.food.x && newPosition.y === this.food.y) {
         validPosition = false;
       }
-      if (
-        this.goldenApple &&
-        newPosition.x === this.goldenApple.x &&
-        newPosition.y === this.goldenApple.y
-      ) {
+      if (this.goldenApple && newPosition.x === this.goldenApple.x && newPosition.y === this.goldenApple.y) {
         validPosition = false;
       }
     }
@@ -149,14 +170,12 @@ class Game {
 
   trySpawnGoldenApple() {
     if (!this.goldenApple && Math.random() < GAME_CONFIG.GOLDEN_APPLE_CHANCE) {
-      // 15% chance
       const position = this.getRandomPosition();
       this.goldenApple = {
         ...position,
         type: GAME_CONFIG.FRUITS[1],
       };
 
-      // Remove golden apple after 5 seconds
       this.goldenAppleTimer = setTimeout(() => {
         this.goldenApple = null;
       }, GAME_CONFIG.GOLDEN_APPLE_DURATION);
@@ -174,16 +193,12 @@ class Game {
       this.score += this.food.type.points;
       this.currentScoreElement.textContent = this.score;
       this.food = this.getRandomFoodPosition();
-      this.trySpawnGoldenApple(); // Try to spawn golden apple when regular apple is eaten
+      this.trySpawnGoldenApple();
       ate = true;
     }
 
     // Check golden apple collision
-    if (
-      this.goldenApple &&
-      head.x === this.goldenApple.x &&
-      head.y === this.goldenApple.y
-    ) {
+    if (this.goldenApple && head.x === this.goldenApple.x && head.y === this.goldenApple.y) {
       this.score += this.goldenApple.type.points;
       this.currentScoreElement.textContent = this.score;
       clearTimeout(this.goldenAppleTimer);
@@ -202,12 +217,7 @@ class Game {
     }
 
     // Check wall collision
-    if (
-      head.x < 0 ||
-      head.x >= GAME_CONFIG.TILE_COUNT ||
-      head.y < 0 ||
-      head.y >= GAME_CONFIG.TILE_COUNT
-    ) {
+    if (head.x < 0 || head.x >= GAME_CONFIG.TILE_COUNT || head.y < 0 || head.y >= GAME_CONFIG.TILE_COUNT) {
       this.gameOver = true;
       this.showGameOver();
       return;
@@ -242,18 +252,12 @@ class Game {
       // Create smooth curve through all points
       for (let i = 0; i < this.snake.length - 1; i++) {
         const current = {
-          x:
-            this.snake[i].x * GAME_CONFIG.GRID_SIZE + GAME_CONFIG.GRID_SIZE / 2,
-          y:
-            this.snake[i].y * GAME_CONFIG.GRID_SIZE + GAME_CONFIG.GRID_SIZE / 2,
+          x: this.snake[i].x * GAME_CONFIG.GRID_SIZE + GAME_CONFIG.GRID_SIZE / 2,
+          y: this.snake[i].y * GAME_CONFIG.GRID_SIZE + GAME_CONFIG.GRID_SIZE / 2,
         };
         const next = {
-          x:
-            this.snake[i + 1].x * GAME_CONFIG.GRID_SIZE +
-            GAME_CONFIG.GRID_SIZE / 2,
-          y:
-            this.snake[i + 1].y * GAME_CONFIG.GRID_SIZE +
-            GAME_CONFIG.GRID_SIZE / 2,
+          x: this.snake[i + 1].x * GAME_CONFIG.GRID_SIZE + GAME_CONFIG.GRID_SIZE / 2,
+          y: this.snake[i + 1].y * GAME_CONFIG.GRID_SIZE + GAME_CONFIG.GRID_SIZE / 2,
         };
 
         const xc = (current.x + next.x) / 2;
@@ -269,12 +273,7 @@ class Game {
       this.ctx.shadowOffsetY = 2;
 
       // More subtle gradient for the snake body
-      const gradient = this.ctx.createLinearGradient(
-        0,
-        0,
-        this.canvas.width,
-        this.canvas.height
-      );
+      const gradient = this.ctx.createLinearGradient(0, 0, this.canvas.width, this.canvas.height);
       gradient.addColorStop(0, GAME_CONFIG.COLORS.SNAKE_BASE);
       gradient.addColorStop(0.3, GAME_CONFIG.COLORS.SNAKE_LIGHT);
       gradient.addColorStop(0.6, GAME_CONFIG.COLORS.SNAKE_BASE);
@@ -373,61 +372,21 @@ class Game {
         this.ctx.lineTo(tongueEndX, tongueEndY);
 
         if (this.dx === 1) {
-          this.ctx.quadraticCurveTo(
-            tongueEndX + 2,
-            tongueEndY,
-            tongueEndX + 2,
-            tongueEndY - 3
-          );
+          this.ctx.quadraticCurveTo(tongueEndX + 2, tongueEndY, tongueEndX + 2, tongueEndY - 3);
           this.ctx.moveTo(tongueEndX, tongueEndY);
-          this.ctx.quadraticCurveTo(
-            tongueEndX + 2,
-            tongueEndY,
-            tongueEndX + 2,
-            tongueEndY + 3
-          );
+          this.ctx.quadraticCurveTo(tongueEndX + 2, tongueEndY, tongueEndX + 2, tongueEndY + 3);
         } else if (this.dx === -1) {
-          this.ctx.quadraticCurveTo(
-            tongueEndX - 2,
-            tongueEndY,
-            tongueEndX - 2,
-            tongueEndY - 3
-          );
+          this.ctx.quadraticCurveTo(tongueEndX - 2, tongueEndY, tongueEndX - 2, tongueEndY - 3);
           this.ctx.moveTo(tongueEndX, tongueEndY);
-          this.ctx.quadraticCurveTo(
-            tongueEndX - 2,
-            tongueEndY,
-            tongueEndX - 2,
-            tongueEndY + 3
-          );
+          this.ctx.quadraticCurveTo(tongueEndX - 2, tongueEndY, tongueEndX - 2, tongueEndY + 3);
         } else if (this.dy === -1) {
-          this.ctx.quadraticCurveTo(
-            tongueEndX,
-            tongueEndY - 2,
-            tongueEndX - 3,
-            tongueEndY - 2
-          );
+          this.ctx.quadraticCurveTo(tongueEndX, tongueEndY - 2, tongueEndX - 3, tongueEndY - 2);
           this.ctx.moveTo(tongueEndX, tongueEndY);
-          this.ctx.quadraticCurveTo(
-            tongueEndX,
-            tongueEndY - 2,
-            tongueEndX + 3,
-            tongueEndY - 2
-          );
+          this.ctx.quadraticCurveTo(tongueEndX, tongueEndY - 2, tongueEndX + 3, tongueEndY - 2);
         } else if (this.dy === 1) {
-          this.ctx.quadraticCurveTo(
-            tongueEndX,
-            tongueEndY + 2,
-            tongueEndX - 3,
-            tongueEndY + 2
-          );
+          this.ctx.quadraticCurveTo(tongueEndX, tongueEndY + 2, tongueEndX - 3, tongueEndY + 2);
           this.ctx.moveTo(tongueEndX, tongueEndY);
-          this.ctx.quadraticCurveTo(
-            tongueEndX,
-            tongueEndY + 2,
-            tongueEndX + 3,
-            tongueEndY + 2
-          );
+          this.ctx.quadraticCurveTo(tongueEndX, tongueEndY + 2, tongueEndX + 3, tongueEndY + 2);
         }
         this.ctx.stroke();
       }
@@ -457,15 +416,7 @@ class Game {
 
     this.ctx.fillStyle = fruit.type.leafColor;
     this.ctx.beginPath();
-    this.ctx.ellipse(
-      fruitX + GAME_CONFIG.GRID_SIZE / 2,
-      fruitY,
-      4,
-      8,
-      Math.PI / 4,
-      0,
-      Math.PI * 2
-    );
+    this.ctx.ellipse(fruitX + GAME_CONFIG.GRID_SIZE / 2, fruitY, 4, 8, Math.PI / 4, 0, Math.PI * 2);
     this.ctx.fill();
   }
 
