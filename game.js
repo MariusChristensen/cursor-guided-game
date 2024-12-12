@@ -29,6 +29,27 @@ highScoreElement.textContent = highScore;
 document.addEventListener("keydown", handleKeyPress);
 
 function handleKeyPress(e) {
+  // Prevent default behavior for game controls
+  if (
+    [
+      "ArrowUp",
+      "ArrowDown",
+      "ArrowLeft",
+      "ArrowRight",
+      "Space",
+      "Enter",
+    ].includes(e.key)
+  ) {
+    e.preventDefault();
+  }
+
+  // If game is over and Enter is pressed, start new game
+  if (gameOver && e.key === "Enter") {
+    startNewGame();
+    return;
+  }
+
+  // Regular game controls
   switch (e.key) {
     case "ArrowUp":
       if (dy !== 1) {
@@ -221,9 +242,13 @@ function showGameOver() {
   modal.style.display = "block";
 }
 
-playAgainButton.addEventListener("click", () => {
+playAgainButton.addEventListener("click", startNewGame);
+
+document.addEventListener("keydown", handleKeyPress);
+
+function startNewGame() {
   modal.style.display = "none";
   resetGame();
-});
+}
 
 requestAnimationFrame(gameLoop);

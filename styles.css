@@ -124,3 +124,19 @@ canvas {
 #playAgainButton:active {
   transform: translateY(0);
 }
+
+.restart-hint {
+  color: #888;
+  font-size: 0.9rem;
+  margin-top: 1rem;
+  opacity: 0.8;
+}
+
+.key {
+  background: rgba(255, 255, 255, 0.1);
+  padding: 2px 8px;
+  border-radius: 4px;
+  color: #4ecca3;
+  font-family: monospace;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
