@@ -23,25 +23,102 @@ if (
 
 const GRID_SIZE = 20;
 const TILE_COUNT = 20;
-const GAME_SPEED = 13; // Increased from 10
-const FRAME_TIME = 1000 / 60; // Target 60 FPS
+const GAME_SPEED = 13;
+const FRAME_TIME = 1000 / 60;
 
+const FRUITS = [
+  {
+    name: "Apple",
+    color: "#e63946",
+    points: 10,
+    leafColor: "#2a9d8f",
+  },
+  {
+    name: "Golden Apple",
+    color: "#ffd700",
+    points: 50,
+    leafColor: "#ff9f1c",
+  },
+];
+
+let lastRenderTime = 0;
+let gameOver = false;
 let snake = [{ x: 10, y: 10 }];
-let food = getRandomFoodPosition();
 let dx = 0;
 let dy = 0;
 let score = 0;
 let highScore = parseInt(localStorage.getItem("snakeHighScore")) || 0;
-let lastRenderTime = 0;
-let gameOver = false;
+let food;
+let goldenApple = null;
+let goldenAppleTimer = null;
 
-// Update the high score display initially
 highScoreElement.textContent = highScore;
 
+function getRandomPosition() {
+  let newPosition;
+  let validPosition = false;
+
+  while (!validPosition) {
+    newPosition = {
+      x: Math.floor(Math.random() * TILE_COUNT),
+      y: Math.floor(Math.random() * TILE_COUNT),
+    };
+
+    validPosition = true;
+    // Check collision with snake
+    for (let segment of snake) {
+      if (segment.x === newPosition.x && segment.y === newPosition.y) {
+        validPosition = false;
+        break;
+      }
+    }
+    // Check collision with other food
+    if (food && newPosition.x === food.x && newPosition.y === food.y) {
+      validPosition = false;
+    }
+    if (
+      goldenApple &&
+      newPosition.x === goldenApple.x &&
+      newPosition.y === goldenApple.y
+    ) {
+      validPosition = false;
+    }
+  }
+
+  return newPosition;
+}
+
+function trySpawnGoldenApple() {
+  if (!goldenApple && Math.random() < 0.15) {
+    // 15% chance
+    const position = getRandomPosition();
+    goldenApple = {
+      ...position,
+      type: FRUITS[1],
+    };
+
+    // Remove golden apple after 5 seconds
+    goldenAppleTimer = setTimeout(() => {
+      goldenApple = null;
+    }, 5000);
+  }
+}
+
+function getRandomFoodPosition() {
+  const position = getRandomPosition();
+  return {
+    ...position,
+    type: FRUITS[0], // Always regular apple
+  };
+}
+
+// Initialize food
+food = getRandomFoodPosition();
+
+playAgainButton.addEventListener("click", startNewGame);
 document.addEventListener("keydown", handleKeyPress);
 
 function handleKeyPress(e) {
-  // Prevent default behavior for game controls
   if (
     [
       "ArrowUp",
@@ -55,13 +132,11 @@ function handleKeyPress(e) {
     e.preventDefault();
   }
 
-  // If game is over and Enter is pressed, start new game
   if (gameOver && e.key === "Enter") {
     startNewGame();
     return;
   }
 
-  // Regular game controls
   switch (e.key) {
     case "ArrowUp":
       if (dy !== 1) {
@@ -90,112 +165,59 @@ function handleKeyPress(e) {
   }
 }
 
-const snakeHeadImg = new Image();
-snakeHeadImg.src = "snake-head.png"; // We'll create this image
-
-function drawSnake() {
-  // Draw body segments
-  for (let i = snake.length - 1; i > 0; i--) {
-    ctx.fillStyle = "#2a9d8f";
-    ctx.beginPath();
-    ctx.roundRect(
-      snake[i].x * GRID_SIZE,
-      snake[i].y * GRID_SIZE,
-      GRID_SIZE - 2,
-      GRID_SIZE - 2,
-      8
-    );
-    ctx.fill();
-
-    // Add connection between segments
-    if (i < snake.length - 1) {
-      const current = snake[i];
-      const next = snake[i + 1];
-      ctx.beginPath();
-      ctx.fillStyle = "#2a9d8f";
-      const midX = ((current.x + next.x) * GRID_SIZE) / 2;
-      const midY = ((current.y + next.y) * GRID_SIZE) / 2;
-      ctx.roundRect(midX, midY, GRID_SIZE - 2, GRID_SIZE - 2, 8);
-      ctx.fill();
-    }
-  }
-
-  // Draw head
-  const head = snake[0];
-  const angle = Math.atan2(dy, dx);
-
-  ctx.save();
-  ctx.translate(
-    head.x * GRID_SIZE + GRID_SIZE / 2,
-    head.y * GRID_SIZE + GRID_SIZE / 2
-  );
-  ctx.rotate(angle);
-
-  // Draw head circle
-  ctx.fillStyle = "#238677";
-  ctx.beginPath();
-  ctx.arc(0, 0, GRID_SIZE / 2, 0, Math.PI * 2);
-  ctx.fill();
-
-  // Draw eyes
-  ctx.fillStyle = "white";
-  ctx.beginPath();
-  ctx.arc(-4, -4, 3, 0, Math.PI * 2);
-  ctx.arc(-4, 4, 3, 0, Math.PI * 2);
-  ctx.fill();
-
-  // Draw pupils
-  ctx.fillStyle = "black";
-  ctx.beginPath();
-  ctx.arc(-5, -4, 1.5, 0, Math.PI * 2);
-  ctx.arc(-5, 4, 1.5, 0, Math.PI * 2);
-  ctx.fill();
-
-  ctx.restore();
-}
-
 function gameLoop(currentTime) {
   if (gameOver) return;
 
   window.requestAnimationFrame(gameLoop);
 
-  // Calculate time since last update
   const secondsSinceLastRender = (currentTime - lastRenderTime) / 1000;
 
-  // Only update game state at game speed
   if (secondsSinceLastRender < 1 / GAME_SPEED) {
-    // Still render every frame for smooth graphics
     render();
     return;
   }
 
   lastRenderTime = currentTime;
 
-  update(); // Game logic
-  render(); // Drawing
+  update();
+  render();
 }
 
 function update() {
-  // Move snake
   const head = { x: snake[0].x + dx, y: snake[0].y + dy };
   snake.unshift(head);
 
-  // Check if snake ate food
-  if (head.x === food.x && head.y === food.y) {
-    food = getRandomFoodPosition();
-    score += 10;
-    currentScoreElement.textContent = score;
+  let ate = false;
 
-    if (score > highScore) {
-      highScore = score;
-      localStorage.setItem("snakeHighScore", highScore);
-      highScoreElement.textContent = highScore;
-    }
-  } else {
+  // Check regular apple collision
+  if (head.x === food.x && head.y === food.y) {
+    score += food.type.points;
+    currentScoreElement.textContent = score;
+    food = getRandomFoodPosition();
+    trySpawnGoldenApple(); // Try to spawn golden apple when regular apple is eaten
+    ate = true;
+  }
+
+  // Check golden apple collision
+  if (goldenApple && head.x === goldenApple.x && head.y === goldenApple.y) {
+    score += goldenApple.type.points;
+    currentScoreElement.textContent = score;
+    clearTimeout(goldenAppleTimer);
+    goldenApple = null;
+    ate = true;
+  }
+
+  if (!ate) {
     snake.pop();
   }
 
-  // Game over conditions
+  if (score > highScore) {
+    highScore = score;
+    localStorage.setItem("snakeHighScore", highScore);
+    highScoreElement.textContent = highScore;
+  }
+
+  // Check wall collision
   if (
     head.x < 0 ||
     head.x >= TILE_COUNT ||
@@ -207,7 +229,7 @@ function update() {
     return;
   }
 
-  // Check if snake hits itself
+  // Check self collision
   for (let i = 1; i < snake.length; i++) {
     if (head.x === snake[i].x && head.y === snake[i].y) {
       gameOver = true;
@@ -218,44 +240,56 @@ function update() {
 }
 
 function render() {
-  // Clear canvas
   ctx.fillStyle = "#222831";
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
   // Draw snake
-  drawSnake();
+  snake.forEach((segment, index) => {
+    ctx.fillStyle = index === 0 ? "#4ecca3" : "#3eb892";
+    ctx.fillRect(
+      segment.x * GRID_SIZE,
+      segment.y * GRID_SIZE,
+      GRID_SIZE - 2,
+      GRID_SIZE - 2
+    );
+  });
 
-  // Draw food
-  const foodX = food.x * GRID_SIZE;
-  const foodY = food.y * GRID_SIZE;
+  // Draw regular food
+  drawFruit(food);
 
-  ctx.fillStyle = "#e63946";
+  // Draw golden apple if it exists
+  if (goldenApple) {
+    drawFruit(goldenApple);
+  }
+}
+
+function drawFruit(fruit) {
+  const fruitX = fruit.x * GRID_SIZE;
+  const fruitY = fruit.y * GRID_SIZE;
+
+  ctx.fillStyle = fruit.type.color;
   ctx.beginPath();
   ctx.arc(
-    foodX + GRID_SIZE / 2,
-    foodY + GRID_SIZE / 2,
+    fruitX + GRID_SIZE / 2,
+    fruitY + GRID_SIZE / 2,
     GRID_SIZE / 2 - 2,
     0,
     Math.PI * 2
   );
   ctx.fill();
 
-  ctx.fillStyle = "#2a9d8f";
+  ctx.fillStyle = fruit.type.leafColor;
   ctx.beginPath();
-  ctx.ellipse(foodX + GRID_SIZE / 2, foodY, 4, 8, Math.PI / 4, 0, Math.PI * 2);
+  ctx.ellipse(
+    fruitX + GRID_SIZE / 2,
+    fruitY,
+    4,
+    8,
+    Math.PI / 4,
+    0,
+    Math.PI * 2
+  );
   ctx.fill();
-}
-
-function resetGame() {
-  snake = [{ x: 10, y: 10 }];
-  dx = 0;
-  dy = 0;
-  score = 0;
-  currentScoreElement.textContent = score;
-  food = getRandomFoodPosition();
-  gameOver = false;
-  lastRenderTime = 0;
-  requestAnimationFrame(gameLoop);
 }
 
 function showGameOver() {
@@ -264,26 +298,22 @@ function showGameOver() {
   modal.style.display = "block";
 }
 
-playAgainButton.addEventListener("click", startNewGame);
-
-document.addEventListener("keydown", handleKeyPress);
-
 function startNewGame() {
   modal.style.display = "none";
-  resetGame();
-}
-
-function getRandomFoodPosition() {
-  return {
-    x: Math.floor(Math.random() * TILE_COUNT),
-    y: Math.floor(Math.random() * TILE_COUNT),
-  };
-}
-
-function init() {
-  highScoreElement.textContent = highScore;
-  window.requestAnimationFrame(gameLoop);
+  snake = [{ x: 10, y: 10 }];
+  dx = 0;
+  dy = 0;
+  score = 0;
+  currentScoreElement.textContent = score;
+  food = getRandomFoodPosition();
+  if (goldenAppleTimer) {
+    clearTimeout(goldenAppleTimer);
+  }
+  goldenApple = null;
+  gameOver = false;
+  lastRenderTime = 0;
+  requestAnimationFrame(gameLoop);
 }
 
 // Start the game
-init();
+requestAnimationFrame(gameLoop);
