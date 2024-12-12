@@ -1,3 +1,5 @@
+"use strict";
+
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
 const currentScoreElement = document.getElementById("currentScore");
@@ -7,20 +9,29 @@ const finalScoreElement = document.getElementById("finalScore");
 const finalHighScoreElement = document.getElementById("finalHighScore");
 const playAgainButton = document.getElementById("playAgainButton");
 
-const gridSize = 20;
-const tileCount = 20;
+if (
+  !canvas ||
+  !currentScoreElement ||
+  !highScoreElement ||
+  !modal ||
+  !finalScoreElement ||
+  !finalHighScoreElement ||
+  !playAgainButton
+) {
+  console.error("Required DOM elements not found");
+}
+
+const GRID_SIZE = 20;
+const TILE_COUNT = 20;
+const GAME_SPEED = 10; // Frames per second
 
 let snake = [{ x: 10, y: 10 }];
-let food = {
-  x: Math.floor(Math.random() * tileCount),
-  y: Math.floor(Math.random() * tileCount),
-};
+let food = getRandomFoodPosition();
 let dx = 0;
 let dy = 0;
 let score = 0;
-let highScore = localStorage.getItem("snakeHighScore") || 0;
+let highScore = parseInt(localStorage.getItem("snakeHighScore")) || 0;
 let lastRenderTime = 0;
-const GAME_SPEED = 10; // Frames per second
 let gameOver = false;
 
 // Update the high score display initially
@@ -87,10 +98,10 @@ function drawSnake() {
     ctx.fillStyle = "#2a9d8f";
     ctx.beginPath();
     ctx.roundRect(
-      snake[i].x * gridSize,
-      snake[i].y * gridSize,
-      gridSize - 2,
-      gridSize - 2,
+      snake[i].x * GRID_SIZE,
+      snake[i].y * GRID_SIZE,
+      GRID_SIZE - 2,
+      GRID_SIZE - 2,
       8
     );
     ctx.fill();
@@ -101,9 +112,9 @@ function drawSnake() {
       const next = snake[i + 1];
       ctx.beginPath();
       ctx.fillStyle = "#2a9d8f";
-      const midX = ((current.x + next.x) * gridSize) / 2;
-      const midY = ((current.y + next.y) * gridSize) / 2;
-      ctx.roundRect(midX, midY, gridSize - 2, gridSize - 2, 8);
+      const midX = ((current.x + next.x) * GRID_SIZE) / 2;
+      const midY = ((current.y + next.y) * GRID_SIZE) / 2;
+      ctx.roundRect(midX, midY, GRID_SIZE - 2, GRID_SIZE - 2, 8);
       ctx.fill();
     }
   }
@@ -114,15 +125,15 @@ function drawSnake() {
 
   ctx.save();
   ctx.translate(
-    head.x * gridSize + gridSize / 2,
-    head.y * gridSize + gridSize / 2
+    head.x * GRID_SIZE + GRID_SIZE / 2,
+    head.y * GRID_SIZE + GRID_SIZE / 2
   );
   ctx.rotate(angle);
 
   // Draw head circle
   ctx.fillStyle = "#238677";
   ctx.beginPath();
-  ctx.arc(0, 0, gridSize / 2, 0, Math.PI * 2);
+  ctx.arc(0, 0, GRID_SIZE / 2, 0, Math.PI * 2);
   ctx.fill();
 
   // Draw eyes
@@ -159,10 +170,7 @@ function gameLoop(currentTime) {
 
   // Check if snake ate food
   if (head.x === food.x && head.y === food.y) {
-    food = {
-      x: Math.floor(Math.random() * tileCount),
-      y: Math.floor(Math.random() * tileCount),
-    };
+    food = getRandomFoodPosition();
     score += 10;
     currentScoreElement.textContent = score;
 
@@ -184,15 +192,15 @@ function gameLoop(currentTime) {
   drawSnake();
 
   // Draw food with a more apple-like appearance
-  const foodX = food.x * gridSize;
-  const foodY = food.y * gridSize;
+  const foodX = food.x * GRID_SIZE;
+  const foodY = food.y * GRID_SIZE;
 
   ctx.fillStyle = "#e63946";
   ctx.beginPath();
   ctx.arc(
-    foodX + gridSize / 2,
-    foodY + gridSize / 2,
-    gridSize / 2 - 2,
+    foodX + GRID_SIZE / 2,
+    foodY + GRID_SIZE / 2,
+    GRID_SIZE / 2 - 2,
     0,
     Math.PI * 2
   );
@@ -201,11 +209,16 @@ function gameLoop(currentTime) {
   // Add a leaf to the food
   ctx.fillStyle = "#2a9d8f";
   ctx.beginPath();
-  ctx.ellipse(foodX + gridSize / 2, foodY, 4, 8, Math.PI / 4, 0, Math.PI * 2);
+  ctx.ellipse(foodX + GRID_SIZE / 2, foodY, 4, 8, Math.PI / 4, 0, Math.PI * 2);
   ctx.fill();
 
   // Game over conditions
-  if (head.x < 0 || head.x >= tileCount || head.y < 0 || head.y >= tileCount) {
+  if (
+    head.x < 0 ||
+    head.x >= TILE_COUNT ||
+    head.y < 0 ||
+    head.y >= TILE_COUNT
+  ) {
     gameOver = true;
     showGameOver();
     return;
@@ -227,10 +240,7 @@ function resetGame() {
   dy = 0;
   score = 0;
   currentScoreElement.textContent = score;
-  food = {
-    x: Math.floor(Math.random() * tileCount),
-    y: Math.floor(Math.random() * tileCount),
-  };
+  food = getRandomFoodPosition();
   gameOver = false;
   lastRenderTime = 0;
   requestAnimationFrame(gameLoop);
@@ -251,4 +261,17 @@ function startNewGame() {
   resetGame();
 }
 
-requestAnimationFrame(gameLoop);
+function getRandomFoodPosition() {
+  return {
+    x: Math.floor(Math.random() * TILE_COUNT),
+    y: Math.floor(Math.random() * TILE_COUNT),
+  };
+}
+
+function init() {
+  highScoreElement.textContent = highScore;
+  window.requestAnimationFrame(gameLoop);
+}
+
+// Start the game
+init();

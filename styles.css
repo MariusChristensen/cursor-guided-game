@@ -1,3 +1,14 @@
+/* Reset and base styles */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  height: 100%;
+}
+
 body {
   display: flex;
   flex-direction: column;
@@ -5,9 +16,10 @@ body {
   background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
   color: #fff;
   font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-  min-height: 100vh;
+  min-height: 100%;
   margin: 0;
   padding: 20px;
+  overflow-x: hidden;
 }
 
 h1 {
@@ -139,4 +151,24 @@ canvas {
   color: #4ecca3;
   font-family: monospace;
   border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* Accessibility improvements */
+button:focus-visible {
+  outline: 2px solid #4ecca3;
+  outline-offset: 2px;
+}
+
+@media (max-width: 500px) {
+  .score-container {
+    width: 100%;
+    max-width: 400px;
+    padding: 0 20px;
+  }
+
+  canvas {
+    width: 100%;
+    max-width: 400px;
+    height: auto;
+  }
 }
