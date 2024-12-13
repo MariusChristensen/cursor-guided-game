@@ -2,10 +2,10 @@ import { defineConfig } from "vite";
 
 export default defineConfig({
   root: "src",
-  base: "/cursor-guided-game/", // Must match your repo name exactly
+  base: "/cursor-guided-game/",
   build: {
     target: "esnext",
-    outDir: "../dist",
+    outDir: "../docs", // Changed from '../dist' to '../docs'
     emptyOutDir: true,
   },
   envDir: "../",
