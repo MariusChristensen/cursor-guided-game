@@ -8,6 +8,7 @@ import {
   orderBy,
   limit,
   getDocs,
+  deleteDoc,
 } from "firebase/firestore";
 import { db } from "./firebase-config.js";
 
@@ -650,46 +651,50 @@ class Game {
 
   async saveGlobalScore(playerName, score) {
     try {
-      // Sanitize input
-      playerName = this.sanitizePlayerName(playerName);
-
       // Validate input
-      if (!playerName) {
-        throw new Error("Please enter a valid name");
+      playerName = this.sanitizePlayerName(playerName);
+      if (!playerName || !Number.isInteger(score) || score < 0) {
+        throw new Error("Invalid score or name");
       }
 
-      if (!Number.isInteger(score) || score < 0 || score > 999999) {
-        throw new Error("Invalid score detected");
-        return;
+      // Get current top 5
+      const highScoresQuery = query(
+        collection(db, "highscores"),
+        orderBy("score", "desc"),
+        limit(5)
+      );
+
+      const querySnapshot = await getDocs(highScoresQuery);
+      const scores = querySnapshot.docs;
+
+      // If we have 5 scores, check if this one is higher than the lowest
+      if (scores.length >= 5) {
+        const lowestScore = scores[scores.length - 1].data().score;
+        if (score <= lowestScore) {
+          console.log("Score not high enough for top 5");
+          return;
+        }
+        // Delete the lowest score
+        await deleteDoc(scores[scores.length - 1].ref);
       }
 
-      // Check if a submission was made recently
-      const lastSubmission = localStorage.getItem("lastScoreSubmission");
-      const now = Date.now();
-      if (lastSubmission && now - parseInt(lastSubmission) < 60000) {
-        throw new Error("Please wait before submitting another score");
-        return;
-      }
-
-      // Proceed with saving
+      // Save the new score
       const scoreData = {
         name: playerName,
         score: score,
         timestamp: new Date(),
-        verified: true,
       };
 
-      const docRef = await addDoc(collection(db, "highscores"), scoreData);
-      localStorage.setItem("lastScoreSubmission", now.toString());
-
+      await addDoc(collection(db, "highscores"), scoreData);
       await this.updateGlobalTopScores();
 
+      // Show celebration message
       const celebrationHtml = `
-            <div class="celebration-message">
-                <h3>🏆 Incredible Score! 🏆</h3>
-                <p>You've made it into the Hall of Fame!</p>
-            </div>
-        `;
+          <div class="celebration-message">
+              <h3>🏆 Incredible Score! 🏆</h3>
+              <p>You've made it into the Hall of Fame!</p>
+          </div>
+      `;
       const nameInputContainer = document.getElementById("nameInputContainer");
       nameInputContainer.style.display = "none";
 
@@ -701,11 +706,9 @@ class Game {
       }
 
       nameInputContainer.insertAdjacentHTML("afterend", celebrationHtml);
-
-      setTimeout(() => this.updateGlobalTopScores(), 500);
     } catch (error) {
       console.error("Error saving global score:", error);
-      alert(error.message || "Failed to save score. Please try again.");
+      alert("Failed to save score. Please try again.");
     }
   }
 
