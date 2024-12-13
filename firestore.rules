@@ -1,0 +1,17 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /highscores/{score} {
+      allow read: true;  // Anyone can read scores
+      
+      allow create: if
+        // Score must be a number
+        request.resource.data.score is number &&
+        // Name must be a string and reasonable length
+        request.resource.data.name is string &&
+        request.resource.data.name.size() <= 20 &&
+        // Must include a timestamp
+        request.resource.data.timestamp is timestamp;
+    }
+  }
+} 
