@@ -1,92 +1,49 @@
-# SnakeySnake
+# SnakeySnake 🐍
 
-A modern take on the classic Snake game, built with JavaScript and HTML5 Canvas.
+A modern take on the classic Snake game, featuring a global Hall of Fame and sleek styling.
+
+## Play Now
+
+[Play SnakeySnake](https://mariuschristensen.github.io/cursor-guided-game/)
 
 ## Features
 
-- Smooth, realistic snake movement with gradient effects
-- Golden apple power-up system
-- High score tracking with local storage
+- Classic snake gameplay with modern visuals
+- Global Hall of Fame leaderboard
+- Personal best score tracking
+- Regular and golden apples for varied scoring
+- Real-time score updates
 - Responsive design
-- Modern UI with clean aesthetics
-- Error handling and performance optimization
 
-## Recent Updates
+## Controls
 
-- Implemented ES6 modules with config file
-- Converted to class-based architecture
-- Enhanced snake visuals with smooth curves and gradients
-- Added proper error handling and cleanup
-- Improved game over modal with styling
+- Use arrow keys to guide the snake
+- Collect apples to grow and score points
+  - Regular apples: 10 points
+  - Golden apples: 50 points
+- Avoid collisions with walls and yourself
+- Press Space to restart after game over
 
-## Planned Features
+## Technical Details
 
-### Mobile Support
-
-- Touch controls with swipe detection
-- Responsive canvas sizing
-- Mobile-optimized UI
-- On-screen control buttons
-- Performance optimization for mobile devices
-
-### Game Modes
-
-- Speed variations
-- Maze/obstacle mode
-- Time trial mode
-- Challenge mode with specific goals
-
-### Power-ups
-
-- Speed boost
-- Shield (protection from walls)
-- Point multiplier
-- Size reducer
-
-### Visual Enhancements
-
-- Particle effects when collecting food
-- Background patterns/themes
-- Day/night cycle
-- Snake skin patterns/colors
-
-### Sound System
-
-- Background music
-- Sound effects for:
-  - Eating
-  - Game over
-  - Power-up collection
-  - Movement
-
-### Settings Menu
-
-- Volume controls
-- Visual theme selection
-- Control rebinding
-- Difficulty settings
-
-### Save System
-
-- Multiple save slots
-- Statistics tracking
-- Achievement progress
-- Custom settings persistence
-
-## How to Play
-
-- Use arrow keys to control the snake
-- Collect red apples to grow and score points (🍎 = 10 points)
-- Golden apples appear randomly for bonus points (✨🍎 = 50 points)
-- Avoid hitting walls and yourself
-- Press Enter to restart after game over
+- Built with vanilla JavaScript
+- Firebase backend for global leaderboard
+- Vite for build optimization
+- Environment variables for secure configuration
+- Rate limiting for score submissions
 
 ## Development
 
-Built with:
+To run locally:
 
-- HTML5 Canvas
-- Modern JavaScript (ES6+)
-- CSS3 with custom properties
+1. Clone the repository
+2. Install dependencies: `npm install`
+3. Create a `.env` file with Firebase configuration
+4. Run development server: `npm run dev`
 
-### Project Structure
+## Security Features
+
+- Protected Firebase credentials
+- Input validation
+- Rate limiting for score submissions
+- Automatic cleanup of old scores
