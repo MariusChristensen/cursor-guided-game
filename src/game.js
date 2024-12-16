@@ -12,6 +12,10 @@ import {
 } from "firebase/firestore";
 import { db } from "./firebase-config.js";
 
+/**
+ * Main Game Class
+ * Controls snake movement, rendering, scoring, and Firebase integration
+ */
 class Game {
   constructor() {
     this.canvas = document.getElementById("gameCanvas");
@@ -30,6 +34,10 @@ class Game {
     this.setupEventListeners();
     this.initializePointsGuide();
   }
+
+  //=============================================================================
+  // INITIALIZATION AND SETUP
+  //=============================================================================
 
   validateElements() {
     if (
@@ -77,6 +85,10 @@ class Game {
     }
     document.removeEventListener("keydown", this.boundHandleKeyPress);
   }
+
+  //=============================================================================
+  // INPUT HANDLING
+  //=============================================================================
 
   handleKeyPress(event) {
     if (event.key.startsWith("Arrow")) {
@@ -177,6 +189,10 @@ class Game {
         break;
     }
   }
+
+  //=============================================================================
+  // GAME MECHANICS
+  //=============================================================================
 
   getRandomPosition() {
     let newPosition;
@@ -291,6 +307,10 @@ class Game {
       }
     }
   }
+
+  //=============================================================================
+  // RENDERING
+  //=============================================================================
 
   render() {
     if (this.snake.length > 0) {
@@ -592,11 +612,11 @@ class Game {
       if (lastSubmission && now - parseInt(lastSubmission) < timeLimit) {
         this.nameInputContainer.style.display = "none";
         const messageHtml = `
-                <p class="restart-hint">
-                    Please wait before submitting another score.<br>
-                    Press <span class="key">Space</span> to restart
-                </p>
-            `;
+              <p class="restart-hint">
+                  Please wait before submitting another score.<br>
+                  Press <span class="key">Space</span> to restart
+              </p>
+          `;
         this.modal
           .querySelector(".modal-content")
           .insertAdjacentHTML("beforeend", messageHtml);
@@ -614,10 +634,10 @@ class Game {
         const restartMessage = document.querySelector(".restart-hint");
         if (!restartMessage) {
           const messageHtml = `
-                    <p class="restart-hint">
-                        Press <span class="key">Space</span> to restart
-                    </p>
-                `;
+                  <p class="restart-hint">
+                      Press <span class="key">Space</span> to restart
+                  </p>
+              `;
           this.modal
             .querySelector(".modal-content")
             .insertAdjacentHTML("beforeend", messageHtml);
@@ -762,20 +782,20 @@ class Game {
       const positions = Array.from({ length: 5 }, (_, i) => {
         const score = scores[i] || null;
         return `
-                    <li>
-                        <div class="score-row">
-                            <div class="score-left">
-                                <span class="position">${i + 1}.</span>
-                                <span class="player-name">${
-                                  score ? score.name : "---"
-                                }</span>
-                            </div>
-                            <span class="score-value">${
-                              score ? score.score : "---"
-                            }</span>
-                        </div>
-                    </li>
-                `;
+              <li>
+                  <div class="score-row">
+                      <div class="score-left">
+                          <span class="position">${i + 1}.</span>
+                          <span class="player-name">${
+                            score ? score.name : "---"
+                          }</span>
+                      </div>
+                      <span class="score-value">${
+                        score ? score.score : "---"
+                      }</span>
+                  </div>
+              </li>
+          `;
       });
 
       const newHtml = positions.join("");
@@ -796,6 +816,10 @@ class Game {
   }
 }
 
+//=============================================================================
+// GAME INITIALIZATION AND ERROR HANDLING
+//=============================================================================
+
 window.onerror = function (message, source, lineno, colno, error) {
   console.error("Game error:", { message, source, lineno, colno, error });
   const game = window.gameInstance;
@@ -812,3 +836,5 @@ try {
 } catch (error) {
   console.error("Failed to initialize game:", error);
 }
+
+export default Game;
