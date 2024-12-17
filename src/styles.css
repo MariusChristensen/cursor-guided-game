@@ -114,14 +114,11 @@ h1 {
 *============================================================================*/
 /* Main game area wrapper */
 .game-container {
-  width: 100%;
-  max-width: 800px;
+  width: 400px;
+  margin: 0 auto;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 20px;
-  padding: 20px;
-  margin: 0 auto;
 }
 
 /* Game canvas with glowing border */
@@ -144,6 +141,7 @@ canvas:hover {
 *============================================================================*/
 /* Score display container */
 .score-container {
+  width: 100%;
   display: flex;
   justify-content: center;
   gap: 40px;
@@ -227,17 +225,17 @@ canvas:hover {
 /* Main leaderboard container */
 .high-score-list {
   width: 100%;
-  max-width: 600px;
   padding: 25px;
+  margin: 20px 0;
   border: 2px solid rgba(78, 204, 163, 0.3);
   border-radius: 15px;
   background: rgba(255, 255, 255, 0.03);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px); /* For Safari */
-  margin: 20px auto;
   box-shadow: 0 0 20px rgba(0, 0, 0, 0.2), 0 0 40px rgba(78, 204, 163, 0.1);
   position: relative; /* Ensure proper stacking context */
   z-index: 1; /* Ensure proper stacking context */
+  left: 0;
 }
 
 /* Header section with title and clear button */
@@ -293,20 +291,22 @@ canvas:hover {
   min-width: 30px;
 }
 
-/* Player name styling */
+/* Player name styling with right margin */
 #topScores .player-name {
   color: white;
   font-weight: 500;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  margin-right: 20px;
 }
 
-/* Score value styling */
+/* Score value styling with left margin */
 #topScores .score-value {
   color: var(--color-primary);
   font-weight: bold;
   font-size: 1.1rem;
+  margin-left: auto;
 }
 
 /* Top 3 special styling */
@@ -665,12 +665,6 @@ button:focus-visible {
 @media (max-width: 1200px) {
   .game-container {
     grid-template-columns: 1fr;
-    max-width: 800px;
-  }
-
-  .high-score-list {
-    max-width: 600px;
-    margin: 0 auto;
   }
 }
 
@@ -777,5 +771,13 @@ button:focus-visible {
   #submitScore:hover {
     transform: none;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1), 0 0 20px rgba(78, 204, 163, 0.2);
+  }
+}
+
+/* For mobile responsiveness */
+@media (max-width: 440px) {
+  .game-container,
+  .high-score-list {
+    width: 100%;
   }
 }
