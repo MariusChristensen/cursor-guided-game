@@ -32,6 +32,13 @@ const firebaseConfig = {
   measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID,
 };
 
+// Add this logging
+console.log("Firebase Config:", {
+  ...firebaseConfig,
+  apiKey: firebaseConfig.apiKey ? "exists" : "missing",
+  appId: firebaseConfig.appId ? "exists" : "missing",
+});
+
 //=============================================================================
 // FIREBASE INITIALIZATION
 //=============================================================================
