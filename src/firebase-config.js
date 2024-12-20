@@ -17,19 +17,19 @@ import { getFirestore } from "firebase/firestore";
  */
 const firebaseConfig = {
   // Authentication
-  apiKey: "AIzaSyDi-8StlfNmKlZVPPhS8CKCjDCIqrJfNFc",
-  authDomain: "snakeysnake-34426.firebaseapp.com",
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
 
   // Project Settings
-  projectId: "snakeysnake-34426",
-  storageBucket: "snakeysnake-34426.firebasestorage.app",
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
 
   // Messaging
-  messagingSenderId: "701773775110",
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
 
   // App Identifiers
-  appId: "1:701773775110:web:252b8dd41bcb28ea545e87",
-  measurementId: "G-S95YBN43ME",
+  appId: import.meta.env.VITE_FIREBASE_APP_ID,
+  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID,
 };
 
 // Add this logging
