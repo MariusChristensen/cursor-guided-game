@@ -9,6 +9,7 @@ import {
   limit,
   getDocs,
   deleteDoc,
+  where,
 } from "firebase/firestore";
 import { db } from "./firebase-config.js";
 
@@ -671,36 +672,73 @@ class Game {
 
   async saveGlobalScore(playerName, score) {
     try {
-      // Validate input
-      playerName = this.sanitizePlayerName(playerName);
-      if (!playerName || !Number.isInteger(score) || score < 0) {
+      // Validate and sanitize input, but keep original capitalization
+      const originalName = this.sanitizePlayerName(playerName);
+      const lowercaseName = originalName.toLowerCase();
+
+      if (!originalName || !Number.isInteger(score) || score < 0) {
         throw new Error("Invalid score or name");
       }
 
-      // Get current top 5
-      const highScoresQuery = query(
+      // Check if this name already exists (case insensitive)
+      const nameQuery = query(
         collection(db, "highscores"),
-        orderBy("score", "desc"),
-        limit(5)
+        where("nameLower", "==", lowercaseName)
       );
+      const nameSnapshot = await getDocs(nameQuery);
 
-      const querySnapshot = await getDocs(highScoresQuery);
-      const scores = querySnapshot.docs;
+      // If name exists, only update if new score is higher
+      if (!nameSnapshot.empty) {
+        const existingScore = nameSnapshot.docs[0].data().score;
+        if (score <= existingScore) {
+          const nameInputContainer =
+            document.getElementById("nameInputContainer");
+          nameInputContainer.style.display = "none";
 
-      // If we have 5 scores, check if this one is higher than the lowest
-      if (scores.length >= 5) {
-        const lowestScore = scores[scores.length - 1].data().score;
-        if (score <= lowestScore) {
-          console.log("Score not high enough for top 5");
+          const messageHtml = `
+            <div class="celebration-message">
+              <p>You already have a higher score of ${existingScore} in the Hall of Fame!</p>
+            </div>
+          `;
+
+          const existingCelebration = document.querySelector(
+            ".celebration-message"
+          );
+          if (existingCelebration) {
+            existingCelebration.remove();
+          }
+
+          nameInputContainer.insertAdjacentHTML("afterend", messageHtml);
           return;
         }
-        // Delete the lowest score
-        await deleteDoc(scores[scores.length - 1].ref);
+        // Delete the old score entry
+        await deleteDoc(nameSnapshot.docs[0].ref);
+      }
+
+      // Get all scores to check total count
+      const allScoresQuery = query(
+        collection(db, "highscores"),
+        orderBy("score", "desc")
+      );
+      const allScoresSnapshot = await getDocs(allScoresQuery);
+      const scores = allScoresSnapshot.docs;
+
+      // If we have 15 scores and new score is higher than the lowest
+      if (scores.length >= 15) {
+        const lowestScore = scores[scores.length - 1].data().score;
+        if (score > lowestScore) {
+          // Delete the lowest score
+          await deleteDoc(scores[scores.length - 1].ref);
+        } else if (score <= lowestScore) {
+          console.log("Score not high enough for top 15");
+          return;
+        }
       }
 
       // Save the new score
       const scoreData = {
-        name: playerName,
+        name: originalName,
+        nameLower: lowercaseName,
         score: score,
         timestamp: new Date(),
       };
@@ -710,10 +748,10 @@ class Game {
 
       // Show celebration message
       const celebrationHtml = `
-          <div class="celebration-message">
-              <h3>🏆 Incredible Score! 🏆</h3>
-              <p>You've made it into the Hall of Fame!</p>
-          </div>
+        <div class="celebration-message">
+          <h3>🏆 Incredible Score! 🏆</h3>
+          <p>You've made it into the Hall of Fame!</p>
+        </div>
       `;
       const nameInputContainer = document.getElementById("nameInputContainer");
       nameInputContainer.style.display = "none";
