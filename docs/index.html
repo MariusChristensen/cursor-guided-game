@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="A classic Snake game with modern styling"
+    />
+    <title>SnakeySnake</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Righteous&display=swap"
+      rel="stylesheet"
+    />
+    <script type="module" crossorigin src="./assets/index-gtnI7zPX.js"></script>
+    <link rel="stylesheet" crossorigin href="./assets/index-B5dxjigs.css">
+  </head>
+  <body>
+    <h1>SnakeySnake</h1>
+    <!-- Main Game Container -->
+    <div class="game-container">
+      <!-- Score Display -->
+      <div class="score-container">
+        <div class="score">Score: <span id="currentScore">0</span></div>
+        <div class="high-score">
+          Personal Best: <span id="highScore">0</span>
+        </div>
+      </div>
+      <!-- Game Canvas -->
+      <canvas id="gameCanvas" width="400" height="400"></canvas>
+      <!-- Points Guide -->
+      <div class="points-guide">
+        <!-- Regular Apple Points -->
+        <div class="apple-score">
+          <canvas class="apple-icon" width="20" height="20"></canvas>
+          <span class="points">10 pts</span>
+        </div>
+        <!-- Golden Apple Points -->
+        <div class="apple-score">
+          <canvas class="apple-icon golden" width="20" height="20"></canvas>
+          <span class="points">50 pts</span>
+        </div>
+      </div>
+      <!-- High Score List -->
+      <div class="high-score-list">
+        <div class="score-header">
+          <h2>Hall of Fame</h2>
+        </div>
+        <ol id="topScores">
+          <!-- Global scores will be inserted here -->
+        </ol>
+      </div>
+    </div>
+    <!-- Game Over Modal -->
+    <div id="gameOverModal" class="modal">
+      <div class="modal-content">
+        <h1 class="game-title">SnakeySnake</h1>
+        <h2>Game Over!</h2>
+        <!-- Final Score Display -->
+        <div class="final-scores">
+          <p>Score: <span id="finalScore">0</span></p>
+          <p>Personal Best: <span id="finalHighScore">0</span></p>
+        </div>
+        <!-- High Score Input -->
+        <div id="nameInputContainer">
+          <p class="top-score-message">New High Score!</p>
+          <input
+            type="text"
+            id="playerName"
+            placeholder="Enter your name"
+            maxlength="20"
+            aria-label="Enter your name for high score"
+          />
+          <button id="submitScore" type="button">Submit Score</button>
+        </div>
+        <!-- Restart Instructions -->
+        <p class="restart-hint">
+          Press <span class="key">Space</span> to restart
+        </p>
+      </div>
+    </div>
+  </body>
+</html>

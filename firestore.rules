@@ -11,7 +11,10 @@ service cloud.firestore {
         request.resource.data.name is string &&
         request.resource.data.name.size() <= 20 &&
         // Must include a timestamp
-        request.resource.data.timestamp is timestamp;
+        request.resource.data.timestamp is timestamp &&
+        // Rate limiting - check if any scores were created in last second
+        !exists(/databases/$(database)/documents/highscores/__ratelimit__) ||
+        get(/databases/$(database)/documents/highscores/__ratelimit__).data.lastWrite < request.time - duration.value(1, 's');
     }
   }
 }
