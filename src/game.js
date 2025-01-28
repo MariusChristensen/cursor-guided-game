@@ -743,6 +743,7 @@ class Game {
         timestamp: new Date(),
       };
 
+      console.log("Attempting to save score:", scoreData);
       await addDoc(collection(db, "highscores"), scoreData);
       await this.updateGlobalTopScores();
 
