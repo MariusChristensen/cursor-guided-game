@@ -31,7 +31,7 @@ A modern take on the classic Snake game, featuring a global Hall of Fame and sle
 - Built with vanilla JavaScript for optimal performance
 - Firebase Firestore for global leaderboard
 - Vite for build optimization and modern development experience
-- Environment variables for secure configuration
+- Environment variables for local development
 - Mobile-friendly design
 
 ## Development
@@ -80,9 +80,12 @@ The game is automatically deployed to GitHub Pages from the `docs` folder when c
 
 ## Security Features
 
-- Protected Firebase credentials using environment variables
 - Input validation for all user inputs
 - Firestore security rules with rate limiting for data protection
+- Firestore security rules validating:
+  - Score must be a number
+  - Name length limited to 20 characters
+  - Required timestamp for each entry
 - Secure data transmission
 
 ## Contributing
