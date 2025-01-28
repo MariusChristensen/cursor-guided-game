@@ -76,14 +76,13 @@ npm run build
 
 ## Deployment
 
-The game is automatically deployed to GitHub Pages through GitHub Actions when changes are pushed to the main branch.
-The deployment process uses environment variables stored securely in GitHub Secrets.
+The game is automatically deployed to GitHub Pages from the `docs` folder when changes are pushed to the main branch.
 
 ## Security Features
 
 - Protected Firebase credentials using environment variables
 - Input validation for all user inputs
-- Firestore security rules for data protection
+- Firestore security rules with rate limiting for data protection
 - Secure data transmission
 
 ## Contributing
