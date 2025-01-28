@@ -4,10 +4,7 @@ A modern take on the classic Snake game, featuring a global Hall of Fame and sle
 
 ## Play Now
 
-Play on either platform:
-
-- [GitHub Pages](https://mariuschristensen.github.io/cursor-guided-game/)
-- [Firebase App](https://snakeysnake-34426.web.app/)
+[Play on GitHub Pages](https://mariuschristensen.github.io/cursor-guided-game/)
 
 ## Features
 
@@ -32,12 +29,9 @@ Play on either platform:
 ## Technical Details
 
 - Built with vanilla JavaScript for optimal performance
-- Firebase services:
-  - Realtime Database for global leaderboard
-  - Firebase Hosting for production deployment
+- Firebase Firestore for global leaderboard
 - Vite for build optimization and modern development experience
 - Environment variables for secure configuration
-- Rate limiting for score submissions
 - Mobile-friendly design
 
 ## Development
@@ -45,41 +39,50 @@ Play on either platform:
 To run locally:
 
 1. Clone the repository
-2. Install dependencies: `npm install`
-3. Create a `.env` file with Firebase configuration:
-   ```
-   VITE_FIREBASE_API_KEY=your_api_key
-   VITE_FIREBASE_AUTH_DOMAIN=your_auth_domain
-   VITE_FIREBASE_PROJECT_ID=your_project_id
-   VITE_FIREBASE_DATABASE_URL=your_database_url
-   ```
-4. Run development server: `npm run dev`
-5. Build for production: `npm run build`
+
+```bash
+git clone https://github.com/MariusChristensen/cursor-guided-game.git
+```
+
+2. Install dependencies
+
+```bash
+npm install
+```
+
+3. Create a `.env` file in the root directory with your Firebase configuration:
+
+```env
+VITE_FIREBASE_API_KEY=your_api_key
+VITE_FIREBASE_AUTH_DOMAIN=your_auth_domain
+VITE_FIREBASE_PROJECT_ID=your_project_id
+VITE_FIREBASE_STORAGE_BUCKET=your_storage_bucket
+VITE_FIREBASE_MESSAGING_SENDER_ID=your_messaging_sender_id
+VITE_FIREBASE_APP_ID=your_app_id
+VITE_FIREBASE_MEASUREMENT_ID=your_measurement_id
+```
+
+4. Start the development server
+
+```bash
+npm run dev
+```
+
+5. Build for production
+
+```bash
+npm run build
+```
 
 ## Deployment
 
-The game is deployed on two platforms:
-
-### GitHub Pages
-
-- Automated deployment through GitHub Actions
-- Accessible at: https://mariuschristensen.github.io/cursor-guided-game/
-
-### Firebase Hosting
-
-- Deploy using Firebase CLI:
-  ```bash
-  npm run build
-  firebase deploy
-  ```
-- Accessible at: https://snakeysnake-34426.web.app/
+The game is automatically deployed to GitHub Pages when changes are pushed to the main branch. The build output is in the `docs` folder.
 
 ## Security Features
 
 - Protected Firebase credentials using environment variables
 - Input validation for all user inputs
-- Rate limiting for score submissions to prevent abuse
-- Automatic cleanup of old scores
+- Firestore security rules for data protection
 - Secure data transmission
 
 ## Contributing
@@ -88,4 +91,4 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 
 ## License
 
-This project is open source and available under the MIT License.
+ISC

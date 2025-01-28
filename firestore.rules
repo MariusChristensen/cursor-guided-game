@@ -2,7 +2,7 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     match /highscores/{score} {
-      allow read: true;  // Anyone can read scores
+      allow read: if true;  // Anyone can read scores
       
       allow create: if
         // Score must be a number

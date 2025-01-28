@@ -5,7 +5,7 @@ Thumbs.db
 # IDE files
 .idea/
 .vscode/
-*.swp 
+*.swp
 
 # Environment variables
 .env
@@ -14,3 +14,7 @@ Thumbs.db
 
 # Node modules
 node_modules
+
+# Firebase files
+.firebase/
+firebase-debug.log
