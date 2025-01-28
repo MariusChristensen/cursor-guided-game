@@ -76,7 +76,7 @@ npm run build
 
 ## Deployment
 
-The game is automatically deployed to GitHub Pages when changes are pushed to the main branch. The build output is in the `docs` folder.
+The game is automatically deployed to GitHub Pages through GitHub Actions when changes are pushed to the main branch.
 
 ## Security Features
 
