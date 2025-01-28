@@ -77,6 +77,7 @@ npm run build
 ## Deployment
 
 The game is automatically deployed to GitHub Pages through GitHub Actions when changes are pushed to the main branch.
+The deployment process uses environment variables stored securely in GitHub Secrets.
 
 ## Security Features
 
