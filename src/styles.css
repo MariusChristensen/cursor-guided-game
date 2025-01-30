@@ -271,6 +271,8 @@ canvas:hover {
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 10px;
   transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
 }
 
 /* Score item layout */
@@ -311,19 +313,19 @@ canvas:hover {
 
 /* Top 3 special styling */
 #topScores li:nth-child(1) {
-  background: none;
+  background: linear-gradient(135deg, rgba(255, 215, 0, 0.1), transparent);
   border: 2px solid rgba(255, 215, 0, 0.6);
   box-shadow: 0 0 15px rgba(255, 215, 0, 0.2);
 }
 
 #topScores li:nth-child(2) {
-  background: none;
+  background: linear-gradient(135deg, rgba(192, 192, 192, 0.1), transparent);
   border: 2px solid rgba(192, 192, 192, 0.6);
   box-shadow: 0 0 15px rgba(192, 192, 192, 0.2);
 }
 
 #topScores li:nth-child(3) {
-  background: none;
+  background: linear-gradient(135deg, rgba(205, 127, 50, 0.1), transparent);
   border: 2px solid rgba(205, 127, 50, 0.6);
   box-shadow: 0 0 15px rgba(205, 127, 50, 0.2);
 }
@@ -391,8 +393,21 @@ canvas:hover {
   max-width: 480px;
   width: 90%;
   border: 2px solid var(--color-primary);
-  box-shadow: 0 0 30px rgba(0, 0, 0, 0.3), 0 0 60px rgba(78, 204, 163, 0.2),
-    inset 0 0 30px rgba(78, 204, 163, 0.1);
+  box-shadow: 0 0 30px rgba(0, 0, 0, 0.3), 0 0 60px rgba(78, 204, 163, 0.2);
+  backdrop-filter: blur(10px);
+  animation: modalSlideIn 0.4s ease-out;
+}
+
+/* Add new modal animation */
+@keyframes modalSlideIn {
+  from {
+    transform: translate(-50%, -45%);
+    opacity: 0;
+  }
+  to {
+    transform: translate(-50%, -50%);
+    opacity: 1;
+  }
 }
 
 /* Modal title styling */
@@ -780,4 +795,21 @@ button:focus-visible {
   .high-score-list {
     width: 100%;
   }
+}
+
+/* Add after the .score-value class */
+@keyframes scorePopup {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.2);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.score-update {
+  animation: scorePopup 0.3s ease-out;
 }

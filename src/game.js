@@ -262,6 +262,10 @@ class Game {
     if (head.x === this.food.x && head.y === this.food.y) {
       this.score += this.food.type.points;
       this.currentScoreElement.textContent = this.score;
+      this.currentScoreElement.classList.add("score-update");
+      setTimeout(() => {
+        this.currentScoreElement.classList.remove("score-update");
+      }, 300);
       this.food = this.getRandomFoodPosition();
       this.trySpawnGoldenApple();
       ate = true;
@@ -274,6 +278,10 @@ class Game {
     ) {
       this.score += this.goldenApple.type.points;
       this.currentScoreElement.textContent = this.score;
+      this.currentScoreElement.classList.add("score-update");
+      setTimeout(() => {
+        this.currentScoreElement.classList.remove("score-update");
+      }, 300);
       clearTimeout(this.goldenAppleTimer);
       this.goldenApple = null;
       ate = true;
