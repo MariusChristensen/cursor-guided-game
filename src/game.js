@@ -34,6 +34,7 @@ class Game {
     this.initializeGame();
     this.setupEventListeners();
     this.initializePointsGuide();
+    this.setupAdminPanel();
   }
 
   //=============================================================================
@@ -860,6 +861,59 @@ class Game {
       .replace(/[<>]/g, "") // Remove angle brackets to prevent HTML injection
       .replace(/[^\w\s-]/g, "") // Only allow letters, numbers, spaces, and hyphens
       .trim();
+  }
+
+  setupAdminPanel() {
+    const adminBtn = document.getElementById("adminButton");
+    const adminModal = document.getElementById("adminModal");
+    const adminLogin = document.getElementById("adminLogin");
+    const adminControls = document.getElementById("adminControls");
+    const adminPassword = document.getElementById("adminPassword");
+    const loginBtn = document.getElementById("adminLoginBtn");
+    const clearBtn = document.getElementById("clearLeaderboard");
+    const closeBtn = document.getElementById("closeAdminPanel");
+
+    const ADMIN_PASSWORD = "snake123"; // Please dont hack me and delete the leaderboard :(
+
+    adminBtn.addEventListener("click", () => {
+      adminModal.style.display = "block";
+      adminLogin.style.display = "flex";
+      adminControls.style.display = "none";
+      adminPassword.value = "";
+    });
+
+    loginBtn.addEventListener("click", () => {
+      if (adminPassword.value === ADMIN_PASSWORD) {
+        adminLogin.style.display = "none";
+        adminControls.style.display = "flex";
+      } else {
+        alert("Incorrect password");
+      }
+    });
+
+    clearBtn.addEventListener("click", async () => {
+      if (confirm("Are you sure you want to clear all scores?")) {
+        const highScoresQuery = query(collection(db, "highscores"));
+        const querySnapshot = await getDocs(highScoresQuery);
+
+        querySnapshot.forEach(async (doc) => {
+          await deleteDoc(doc.ref);
+        });
+
+        await this.updateGlobalTopScores();
+        adminModal.style.display = "none";
+      }
+    });
+
+    closeBtn.addEventListener("click", () => {
+      adminModal.style.display = "none";
+    });
+
+    window.addEventListener("click", (event) => {
+      if (event.target === adminModal) {
+        adminModal.style.display = "none";
+      }
+    });
   }
 }
 
