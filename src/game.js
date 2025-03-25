@@ -873,35 +873,58 @@ class Game {
     const clearBtn = document.getElementById("clearLeaderboard");
     const closeBtn = document.getElementById("closeAdminPanel");
 
-    const ADMIN_PASSWORD = "snake123"; // Please dont hack me and delete the leaderboard :(
+    // If any required elements are missing, skip admin panel setup
+    if (
+      !adminBtn ||
+      !adminModal ||
+      !adminLogin ||
+      !adminControls ||
+      !adminPassword ||
+      !loginBtn ||
+      !clearBtn ||
+      !closeBtn
+    ) {
+      console.warn("Admin panel elements not found, skipping setup");
+      return;
+    }
+
+    const ADMIN_PASSWORD = "snake123";
 
     adminBtn.addEventListener("click", () => {
       adminModal.style.display = "block";
       adminLogin.style.display = "flex";
       adminControls.style.display = "none";
-      adminPassword.value = "";
+      adminPassword.value = ""; // Clear password field
     });
 
     loginBtn.addEventListener("click", () => {
       if (adminPassword.value === ADMIN_PASSWORD) {
         adminLogin.style.display = "none";
         adminControls.style.display = "flex";
-      } else {
-        alert("Incorrect password");
       }
     });
 
     clearBtn.addEventListener("click", async () => {
-      if (confirm("Are you sure you want to clear all scores?")) {
-        const highScoresQuery = query(collection(db, "highscores"));
-        const querySnapshot = await getDocs(highScoresQuery);
+      const confirmed = confirm("Are you sure you want to clear all scores?");
+      if (confirmed) {
+        try {
+          const scoresQuery = query(collection(db, "highscores"));
+          const querySnapshot = await getDocs(scoresQuery);
 
-        querySnapshot.forEach(async (doc) => {
-          await deleteDoc(doc.ref);
-        });
+          // Delete each document
+          const deletePromises = querySnapshot.docs.map((doc) =>
+            deleteDoc(doc.ref)
+          );
 
-        await this.updateGlobalTopScores();
-        adminModal.style.display = "none";
+          await Promise.all(deletePromises);
+          await this.updateGlobalTopScores();
+
+          adminModal.style.display = "none";
+          alert("All scores have been cleared!");
+        } catch (error) {
+          console.error("Error clearing scores:", error);
+          alert("Failed to clear scores. Please try again.");
+        }
       }
     });
 
@@ -909,6 +932,7 @@ class Game {
       adminModal.style.display = "none";
     });
 
+    // Close modal when clicking outside
     window.addEventListener("click", (event) => {
       if (event.target === adminModal) {
         adminModal.style.display = "none";
